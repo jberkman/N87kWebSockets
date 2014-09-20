@@ -145,8 +145,9 @@
 		16AE115D19CE1DD3003E9B4B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				CLASSPREFIX = N87k;
 				LastUpgradeCheck = 0600;
-				ORGANIZATIONNAME = "87k Networks";
+				ORGANIZATIONNAME = "jacob berkman";
 				TargetAttributes = {
 					16AE116519CE1DD3003E9B4B = {
 						CreatedOnToolsVersion = 6.0.1;
