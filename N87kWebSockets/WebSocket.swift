@@ -172,27 +172,36 @@ extension WebSocket {
     }
 
     private func sendHandshake() {
-        let URL = NSURLComponents(URL: currentRequest.URL, resolvingAgainstBaseURL: true)
-        let host = URL.percentEncodedHost!
-        var resource = URL.percentEncodedPath ?? ""
-        if resource.isEmpty {
-            resource = "/"
-        }
-        if let query = URL.percentEncodedQuery {
-            resource = "\(resource)?\(query)"
-        }
-
         key = generateKey()
         if key == nil {
-            NSLog("Could not get random bytes");
+            NSLog("Could not generate random key");
             // FIXME
             return
         }
 
+        let URL = NSURLComponents(URL: currentRequest.URL, resolvingAgainstBaseURL: true)
+
+        let host = URL.percentEncodedHost!
+        let port = URL.port != nil && URL.port != scheme!.defaultPort ? ":\(URL.port!)" : ""
+
+        var path: String
+        if let encodedPath = URL.percentEncodedPath {
+            path = !encodedPath.isEmpty ? encodedPath : "/"
+        } else {
+            path = "/"
+        }
+
+        var query: String
+        if let encodedQuery = URL.percentEncodedQuery {
+            query = "?\(encodedQuery)"
+        } else {
+            query = ""
+        }
+
         let handshake = join("\r\n", [
-            "GET \(resource) HTTP/1.1",
+            "GET \(path)\(query) HTTP/1.1",
             "Connection: Upgrade",
-            "Host: \(host)",
+            "Host: \(host)\(port)",
             "Sec-WebSocket-Key: \(key!)",
             "Sec-WebSocket-Version: 13",
             "Upgrade: websocket",
