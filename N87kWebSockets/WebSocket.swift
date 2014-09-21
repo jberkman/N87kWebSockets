@@ -35,6 +35,12 @@ public enum Scheme: String {
     public var defaultPort: Int { return self == WS ? 80 : 443 }
 }
 
+public protocol WebSocketDelegate: NSObjectProtocol {
+    func webSocketDidOpen(webSocket: WebSocket)
+    func webSocketDidClose(webSocket: WebSocket)
+    func webSocket(webSocket: WebSocket, didFailWithError error: NSError)
+}
+
 public class WebSocket: NSObject {
 
     private enum State {
@@ -258,10 +264,4 @@ extension WebSocket: NSStreamDelegate {
             NSLog("ErrorOccurred: %@", stream.streamError!)
         }
     }
-}
-
-public protocol WebSocketDelegate: NSObjectProtocol {
-    func webSocketDidOpen(webSocket: WebSocket)
-    func webSocketDidClose(webSocket: WebSocket)
-    func webSocket(webSocket: WebSocket, didFailWithError error: NSError)
 }
