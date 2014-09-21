@@ -10,6 +10,8 @@
 		16AE116C19CE1DD3003E9B4B /* N87kWebSockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 16AE116B19CE1DD3003E9B4B /* N87kWebSockets.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16AE117619CE1DD3003E9B4B /* N87kWebSocketsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AE117519CE1DD3003E9B4B /* N87kWebSocketsTests.swift */; };
 		16AE118219CE2438003E9B4B /* WebSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AE118119CE2438003E9B4B /* WebSocket.swift */; };
+		16E8E86419CF8534005DAB67 /* DataOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86319CF8534005DAB67 /* DataOutputStream.swift */; };
+		16E8E86619CF8CA9005DAB67 /* DataInputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +22,8 @@
 		16AE117419CE1DD3003E9B4B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16AE117519CE1DD3003E9B4B /* N87kWebSocketsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = N87kWebSocketsTests.swift; sourceTree = "<group>"; };
 		16AE118119CE2438003E9B4B /* WebSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
+		16E8E86319CF8534005DAB67 /* DataOutputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataOutputStream.swift; sourceTree = "<group>"; };
+		16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataInputStream.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,9 +65,11 @@
 		16AE116819CE1DD3003E9B4B /* N87kWebSockets */ = {
 			isa = PBXGroup;
 			children = (
-				16AE118119CE2438003E9B4B /* WebSocket.swift */,
+				16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */,
+				16E8E86319CF8534005DAB67 /* DataOutputStream.swift */,
 				16AE116B19CE1DD3003E9B4B /* N87kWebSockets.h */,
 				16AE116919CE1DD3003E9B4B /* Supporting Files */,
+				16AE118119CE2438003E9B4B /* WebSocket.swift */,
 			);
 			path = N87kWebSockets;
 			sourceTree = "<group>";
@@ -200,6 +206,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16E8E86619CF8CA9005DAB67 /* DataInputStream.swift in Sources */,
+				16E8E86419CF8534005DAB67 /* DataOutputStream.swift in Sources */,
 				16AE118219CE2438003E9B4B /* WebSocket.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -379,6 +387,7 @@
 				16AE117B19CE1DD3003E9B4B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		16AE117C19CE1DD3003E9B4B /* Build configuration list for PBXNativeTarget "N87kWebSocketsTests" */ = {
 			isa = XCConfigurationList;
@@ -387,6 +396,7 @@
 				16AE117E19CE1DD3003E9B4B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

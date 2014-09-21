@@ -69,12 +69,10 @@ public class WebSocket: NSObject {
 
     public let subprotocols: [String]
 
-    private var input: NSInputStream?
-    private var output: NSOutputStream?
+    private var inputStream: DataInputStream?
+    private var outputStream: DataOutputStream?
 
     private var key: String?
-    private var outputBuffers = [NSData]()
-    private var outputBufferOffset = 0
 
     public init(request: NSURLRequest, subprotocols: [String], delegate: WebSocketDelegate) {
         originalRequest = request
@@ -99,15 +97,11 @@ public class WebSocket: NSObject {
 extension WebSocket {
     private class func generateKey() -> String? {
         let keyLength = 16
-        let bytes = UnsafeMutablePointer<UInt8>.alloc(keyLength)
-        if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), bytes) != 0 {
-            bytes.dealloc(keyLength)
+        let data = NSMutableData(length: keyLength)
+        if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) != 0 {
             return nil
         }
-        let data = NSData(bytesNoCopy: UnsafeMutablePointer<Void>(bytes), length: keyLength)
-        let ret = data.base64EncodedStringWithOptions(nil)
-        bytes.destroy()
-        return ret
+        return data.base64EncodedStringWithOptions(nil)
     }
 }
 
@@ -130,55 +124,38 @@ extension WebSocket {
         }
 
         let port = currentRequest.URL.port?.integerValue ?? scheme!.defaultPort
+        var input: NSInputStream?
+        var output: NSOutputStream?
         NSStream.getStreamsToHostWithName(currentRequest.URL.host!, port: port, inputStream: &input, outputStream: &output)
-
-        input?.delegate = self
-        output?.delegate = self
+        if input == nil || output == nil {
+            NSLog("Could not open streams")
+            return
+        }
 
         let securityLevel = scheme!.isSecure ? NSStreamSocketSecurityLevelTLSv1 : NSStreamSocketSecurityLevelNone
-        input?.setProperty(securityLevel, forKey: NSStreamSocketSecurityLevelKey)
-        output?.setProperty(securityLevel, forKey: NSStreamSocketSecurityLevelKey)
+        input!.setProperty(securityLevel, forKey: NSStreamSocketSecurityLevelKey)
+        output!.setProperty(securityLevel, forKey: NSStreamSocketSecurityLevelKey)
 
-        input?.scheduleInRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
-        output?.scheduleInRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+        input!.scheduleInRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+        output!.scheduleInRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
 
-        input?.open()
-        output?.open()
+        inputStream = DataInputStream(inputStream: input!)
+        outputStream = DataOutputStream(outputStream: output!)
+
+        inputStream!.delegate = self
+        outputStream!.delegate = self
+
+        input!.open()
+        output!.open()
+
+        writeHandshake()
     }
 
 }
 
 extension WebSocket {
 
-    private func sendData() {
-        if output?.hasSpaceAvailable == true {
-            if let data = outputBuffers.first {
-                let bytes = UnsafePointer<UInt8>(data.bytes.advancedBy(outputBufferOffset))
-                let length = data.length - outputBufferOffset
-                let bytesWritten = output!.write(bytes, maxLength: length)
-                NSLog("Wrote %@ bytes.", "\(bytesWritten)")
-                if bytesWritten == length {
-                    outputBuffers.removeAtIndex(0)
-                    outputBufferOffset = 0
-                } else if bytesWritten > 0 {
-                    outputBufferOffset += bytesWritten
-                } else {
-                    NSLog("Error writing bytes: %@", output!.streamError!)
-                }
-            } else {
-                NSLog("No data to write...")
-            }
-        }
-    }
-
-    private func sendData(data: NSData) {
-        outputBuffers.append(data)
-        if outputBuffers.count == 1 && (output?.hasSpaceAvailable ?? false) {
-            sendData()
-        }
-    }
-
-    private func sendHandshake() {
+    private func writeHandshake() {
         if let newKey = WebSocket.generateKey() {
             key = newKey
         } else {
@@ -217,51 +194,35 @@ extension WebSocket {
         NSLog("sending handshake: \n%@", handshake)
 
         if let data = (handshake as NSString).dataUsingEncoding(NSASCIIStringEncoding) {
-            sendData(data)
+            outputStream?.writeData(data)
         } else {
             // FIXME: handle error
             NSLog("Could not encode handshake.")
         }
     }
+
 }
 
-extension WebSocket {
-    func receiveData() {
-        let bufferSize = 8192
-        let buffer = UnsafeMutablePointer<UInt8>.alloc(bufferSize)
-        let bytesRead = input!.read(buffer, maxLength: bufferSize)
-        if bytesRead < 0 {
-            NSLog("Error reading from input")
-            return
-        }
-        let data = NSData(bytesNoCopy: UnsafeMutablePointer<Void>(buffer), length: bytesRead > 0 ? bytesRead : bufferSize)
-        let response = NSString(data: data, encoding: NSASCIIStringEncoding)
-        buffer.destroy()
-        NSLog("Got response:\n%@", response)
+extension WebSocket: DataInputStreamDelegate {
+
+    func dataInputStream(dataInputStream: DataInputStream, didReadData data: NSData) {
+        NSLog("%@\n%@", __FUNCTION__, NSString(data: data, encoding: NSASCIIStringEncoding))
     }
+
+    func dataInputStream(dataInputStream: DataInputStream, didCloseWithError error: NSError) {
+        NSLog("%@ %@", __FUNCTION__, error)
+    }
+
+    func dataInputStreamDidReadToEnd(dataInputStream: DataInputStream) {
+        NSLog("%@", __FUNCTION__)
+    }
+
 }
 
-extension WebSocket: NSStreamDelegate {
-    public func stream(stream: NSStream, handleEvent streamEvent: NSStreamEvent) {
-        if stream == output {
-            if streamEvent & .OpenCompleted == .OpenCompleted {
-                NSLog("OpenCompleted: %@", stream)
-                sendHandshake()
-            }
-            if streamEvent & .HasSpaceAvailable == .HasSpaceAvailable {
-                NSLog("HasSpaceAvailable: %@", stream)
-                sendData()
-            }
-        } else if stream == input {
-            if streamEvent & .HasBytesAvailable == .HasBytesAvailable {
-                NSLog("HasBytesAvailable: %@", stream)
-                receiveData()
-            }
-        } else {
-            return
-        }
-        if streamEvent & .ErrorOccurred == .ErrorOccurred {
-            NSLog("ErrorOccurred: %@", stream.streamError!)
-        }
+extension WebSocket: DataOutputStreamDelegate {
+
+    func dataOutputStream(dataOutputStream: DataOutputStream, didCloseWithError error: NSError) {
+        NSLog("%@ %@", __FUNCTION__, error)
     }
+
 }
