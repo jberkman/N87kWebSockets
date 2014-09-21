@@ -91,12 +91,25 @@ public class WebSocket: NSObject {
 }
 
 extension WebSocket {
-    @objc private func delegateErrorTimerDidFire(timer: NSTimer) {
-        delegate?.webSocket(self, didFailWithError: timer.userInfo as NSError)
+    private class func generateKey() -> String? {
+        let keyLength = 16
+        let bytes = UnsafeMutablePointer<UInt8>.alloc(keyLength)
+        if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), bytes) != 0 {
+            bytes.dealloc(keyLength)
+            return nil
+        }
+        let data = NSData(bytesNoCopy: UnsafeMutablePointer<Void>(bytes), length: keyLength)
+        let ret = data.base64EncodedStringWithOptions(nil)
+        bytes.destroy()
+        return ret
     }
 }
 
 extension WebSocket {
+
+    @objc private func delegateErrorTimerDidFire(timer: NSTimer) {
+        delegate?.webSocket(self, didFailWithError: timer.userInfo as NSError)
+    }
 
     private func connect() {
         if state != .Connecting {
@@ -127,6 +140,10 @@ extension WebSocket {
         output?.open()
     }
 
+}
+
+extension WebSocket {
+
     private func sendData() {
         if output?.hasSpaceAvailable == true {
             if let data = outputBuffers.first {
@@ -154,26 +171,11 @@ extension WebSocket {
             sendData()
         }
     }
-}
-
-extension WebSocket {
-
-    private func generateKey() -> String? {
-        let keyLength = 16
-        let bytes = UnsafeMutablePointer<UInt8>.alloc(keyLength)
-        if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), bytes) != 0 {
-            bytes.dealloc(keyLength)
-            return nil
-        }
-        let data = NSData(bytesNoCopy: UnsafeMutablePointer<Void>(bytes), length: keyLength)
-        let ret = data.base64EncodedStringWithOptions(nil)
-        bytes.destroy()
-        return ret
-    }
 
     private func sendHandshake() {
-        key = generateKey()
-        if key == nil {
+        if let newKey = WebSocket.generateKey() {
+            key = newKey
+        } else {
             NSLog("Could not generate random key");
             // FIXME
             return
