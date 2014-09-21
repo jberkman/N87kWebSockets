@@ -67,6 +67,8 @@ public class WebSocket: NSObject {
     private var output: NSOutputStream?
 
     private var key: String?
+    private var outputBuffers = [NSData]()
+    private var outputBufferOffset = 0
 
     public init(request: NSURLRequest, subprotocols: [String], delegate: WebSocketDelegate) {
         originalRequest = request
@@ -125,6 +127,33 @@ extension WebSocket {
         output?.open()
     }
 
+    private func sendData() {
+        if output?.hasSpaceAvailable == true {
+            if let data = outputBuffers.first {
+                let bytes = UnsafePointer<UInt8>(data.bytes.advancedBy(outputBufferOffset))
+                let length = data.length - outputBufferOffset
+                let bytesWritten = output!.write(bytes, maxLength: length)
+                NSLog("Wrote %@ bytes.", "\(bytesWritten)")
+                if bytesWritten == length {
+                    outputBuffers.removeAtIndex(0)
+                    outputBufferOffset = 0
+                } else if bytesWritten > 0 {
+                    outputBufferOffset += bytesWritten
+                } else {
+                    NSLog("Error writing bytes: %@", output!.streamError!)
+                }
+            } else {
+                NSLog("No data to write...")
+            }
+        }
+    }
+
+    private func sendData(data: NSData) {
+        outputBuffers.append(data)
+        if outputBuffers.count == 1 && (output?.hasSpaceAvailable ?? false) {
+            sendData()
+        }
+    }
 }
 
 extension WebSocket {
@@ -146,7 +175,7 @@ extension WebSocket {
         let URL = NSURLComponents(URL: currentRequest.URL, resolvingAgainstBaseURL: true)
         let host = URL.percentEncodedHost!
         var resource = URL.percentEncodedPath ?? ""
-        if resource == "" {
+        if resource.isEmpty {
             resource = "/"
         }
         if let query = URL.percentEncodedQuery {
@@ -168,15 +197,19 @@ extension WebSocket {
             "Sec-WebSocket-Version: 13",
             "Upgrade: websocket",
             "", ""])
-        NSLog("writing handshake: \n%@", handshake)
+        NSLog("sending handshake: \n%@", handshake)
 
-        let bytesWritten = output!.write(handshake, maxLength: handshake.lengthOfBytesUsingEncoding(NSASCIIStringEncoding))
-        NSLog("Wrote %@ bytes.", "\(bytesWritten)")
+        if let data = (handshake as NSString).dataUsingEncoding(NSASCIIStringEncoding) {
+            sendData(data)
+        } else {
+            // FIXME: handle error
+            NSLog("Could not encode handshake.")
+        }
     }
 }
 
 extension WebSocket {
-    func readData() {
+    func receiveData() {
         let bufferSize = 8192
         let buffer = UnsafeMutablePointer<UInt8>.alloc(bufferSize)
         let bytesRead = input!.read(buffer, maxLength: bufferSize)
@@ -193,16 +226,25 @@ extension WebSocket {
 
 extension WebSocket: NSStreamDelegate {
     public func stream(stream: NSStream, handleEvent streamEvent: NSStreamEvent) {
-        if streamEvent & .ErrorOccurred == .ErrorOccurred {
-            NSLog("Error occurred: %@", stream.streamError!)
-        }
-        if streamEvent & .HasSpaceAvailable == .HasSpaceAvailable && stream == output {
-            if key == nil {
+        if stream == output {
+            if streamEvent & .OpenCompleted == .OpenCompleted {
+                NSLog("OpenCompleted: %@", stream)
                 sendHandshake()
             }
+            if streamEvent & .HasSpaceAvailable == .HasSpaceAvailable {
+                NSLog("HasSpaceAvailable: %@", stream)
+                sendData()
+            }
+        } else if stream == input {
+            if streamEvent & .HasBytesAvailable == .HasBytesAvailable {
+                NSLog("HasBytesAvailable: %@", stream)
+                receiveData()
+            }
+        } else {
+            return
         }
-        if streamEvent & .HasBytesAvailable == .HasBytesAvailable && stream == input {
-            readData()
+        if streamEvent & .ErrorOccurred == .ErrorOccurred {
+            NSLog("ErrorOccurred: %@", stream.streamError!)
         }
     }
 }
