@@ -188,7 +188,7 @@ extension WebSocket {
         expectedAccept = "\(key!)\(Const.GUID)".N87k_SHA1Digest
         let port = currentRequest.URL.port != nil && currentRequest.URL.port != scheme!.defaultPort ? ":\(currentRequest.URL.port!)" : ""
 
-        let request = CFHTTPMessageCreateRequest(kCFAllocatorDefault, "GET", NSURL(string: "http://off.net:8080"), "HTTP/1.1").takeRetainedValue()
+        let request = CFHTTPMessageCreateRequest(kCFAllocatorDefault, currentRequest.HTTPMethod! as NSString, currentRequest.URL, Const.HTTPVersion).takeRetainedValue()
         let headers: [NSString: NSString] = [
             HeaderKeys.Host: "\(currentRequest.URL.host!)\(port)",
             HeaderKeys.Connection: HeaderValues.Upgrade,
