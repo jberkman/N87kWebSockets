@@ -12,6 +12,7 @@
 		16AE118219CE2438003E9B4B /* WebSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AE118119CE2438003E9B4B /* WebSocket.swift */; };
 		16E8E86419CF8534005DAB67 /* DataOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86319CF8534005DAB67 /* DataOutputStream.swift */; };
 		16E8E86619CF8CA9005DAB67 /* DataInputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */; };
+		16E8E89119D003E0005DAB67 /* N87kSwiftSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16E8E89019D003E0005DAB67 /* N87kSwiftSupport.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		16AE118119CE2438003E9B4B /* WebSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
 		16E8E86319CF8534005DAB67 /* DataOutputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataOutputStream.swift; sourceTree = "<group>"; };
 		16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataInputStream.swift; sourceTree = "<group>"; };
+		16E8E89019D003E0005DAB67 /* N87kSwiftSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = N87kSwiftSupport.framework; path = "../N87kSwiftSupport/build/Debug-iphoneos/N87kSwiftSupport.framework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,6 +33,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16E8E89119D003E0005DAB67 /* N87kSwiftSupport.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,6 +50,7 @@
 		16AE115C19CE1DD3003E9B4B = {
 			isa = PBXGroup;
 			children = (
+				16E8E89019D003E0005DAB67 /* N87kSwiftSupport.framework */,
 				16AE116819CE1DD3003E9B4B /* N87kWebSockets */,
 				16AE117219CE1DD3003E9B4B /* N87kWebSocketsTests */,
 				16AE116719CE1DD3003E9B4B /* Products */,
@@ -315,6 +319,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/jacob/Documents/N87kSwiftSupport/build/Debug-iphoneos",
+				);
 				INFOPLIST_FILE = N87kWebSockets/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -330,6 +338,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/jacob/Documents/N87kSwiftSupport/build/Debug-iphoneos",
+				);
 				INFOPLIST_FILE = N87kWebSockets/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";

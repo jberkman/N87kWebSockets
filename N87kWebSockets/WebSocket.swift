@@ -24,8 +24,11 @@
 //  IN THE SOFTWARE.
 //
 
+import CFNetwork
 import Foundation
 import Security
+
+import N87kSwiftSupport
 
 public enum Scheme: String {
     case WS = "ws"
@@ -50,7 +53,7 @@ public class WebSocket: NSObject {
         didSet {
             switch state {
             case .Connecting:
-                key = nil
+                expectedAccept = nil
             default:
                 break
             }
@@ -70,9 +73,11 @@ public class WebSocket: NSObject {
     public let subprotocols: [String]
 
     private var inputStream: DataInputStream?
-    private var outputStream: DataOutputStream?
+    private var response: CFHTTPMessageRef?
+    private var inputBuffer: NSMutableData?
+    private var expectedAccept: NSString?
 
-    private var key: String?
+    private var outputStream: DataOutputStream?
 
     public init(request: NSURLRequest, subprotocols: [String], delegate: WebSocketDelegate) {
         originalRequest = request
@@ -106,6 +111,27 @@ extension WebSocket {
 }
 
 extension WebSocket {
+
+    private struct Const {
+        static let HTTPVersion: NSString = "HTTP/1.1"
+        static let GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+        static let UpgradeStatusCode = 101
+    }
+
+    private struct HeaderKeys {
+        static let Connection: NSString = "Connection"
+        static let Host: NSString = "Host"
+        static let SecWebSocketAccept: NSString = "Sec-WebSocket-Accept"
+        static let SecWebSocketKey: NSString = "Sec-WebSocket-Key"
+        static let SecWebSocketVersion: NSString = "Sec-WebSocket-Version"
+        static let Upgrade: NSString = "Upgrade"
+    }
+
+    private struct HeaderValues {
+        static let Upgrade: NSString = "Upgrade"
+        static let Version: NSString = "13"
+        static let WebSocket: NSString = "WebSocket"
+    }
 
     @objc private func delegateErrorTimerDidFire(timer: NSTimer) {
         delegate?.webSocket(self, didFailWithError: timer.userInfo as NSError)
@@ -151,54 +177,79 @@ extension WebSocket {
         writeHandshake()
     }
 
-}
-
-extension WebSocket {
-
     private func writeHandshake() {
-        if let newKey = WebSocket.generateKey() {
-            key = newKey
-        } else {
+        let key = WebSocket.generateKey()
+        if key == nil {
             NSLog("Could not generate random key");
             // FIXME
             return
         }
 
-        let URL = NSURLComponents(URL: currentRequest.URL, resolvingAgainstBaseURL: true)
+        expectedAccept = "\(key!)\(Const.GUID)".N87k_SHA1Digest
+        let port = currentRequest.URL.port != nil && currentRequest.URL.port != scheme!.defaultPort ? ":\(currentRequest.URL.port!)" : ""
 
-        let host = URL.percentEncodedHost!
-        let port = URL.port != nil && URL.port != scheme!.defaultPort ? ":\(URL.port!)" : ""
-
-        var path: String
-        if let encodedPath = URL.percentEncodedPath {
-            path = !encodedPath.isEmpty ? encodedPath : "/"
-        } else {
-            path = "/"
+        let request = CFHTTPMessageCreateRequest(kCFAllocatorDefault, "GET", NSURL(string: "http://off.net:8080"), "HTTP/1.1").takeRetainedValue()
+        let headers: [NSString: NSString] = [
+            HeaderKeys.Host: "\(currentRequest.URL.host!)\(port)",
+            HeaderKeys.Connection: HeaderValues.Upgrade,
+            HeaderKeys.Upgrade: HeaderValues.WebSocket,
+            HeaderKeys.SecWebSocketVersion: HeaderValues.Version,
+            HeaderKeys.SecWebSocketKey: key!
+        ]
+        for (k, v) in headers {
+            CFHTTPMessageSetHeaderFieldValue(request, k, v)
         }
 
-        var query: String
-        if let encodedQuery = URL.percentEncodedQuery {
-            query = "?\(encodedQuery)"
+        if let data = CFHTTPMessageCopySerializedMessage(request)?.takeRetainedValue() {
+            outputStream!.writeData(data)
         } else {
-            query = ""
+            //FIXME: Handle error
+            NSLog("Could not serialize request")
+        }
+    }
+
+    private func hasHeaderNamed(header: NSString, withValue value: NSString) -> Bool {
+        if let headerValue = CFHTTPMessageCopyHeaderFieldValue(response, header)?.takeRetainedValue() {
+            return value.caseInsensitiveCompare(headerValue as NSString) == NSComparisonResult.OrderedSame
+        }
+        return false
+    }
+
+    private func readHandshakeData(data: NSData) {
+        if response == nil {
+            response = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(0)).takeRetainedValue()
+        }
+        CFHTTPMessageAppendBytes(response, UnsafePointer<UInt8>(data.bytes), data.length)
+        if CFHTTPMessageIsHeaderComplete(response) == Boolean(0) {
+            return
         }
 
-        let handshake = join("\r\n", [
-            "GET \(path)\(query) HTTP/1.1",
-            "Connection: Upgrade",
-            "Host: \(host)\(port)",
-            "Sec-WebSocket-Key: \(key!)",
-            "Sec-WebSocket-Version: 13",
-            "Upgrade: websocket",
-            "", ""])
-        NSLog("sending handshake: \n%@", handshake)
-
-        if let data = (handshake as NSString).dataUsingEncoding(NSASCIIStringEncoding) {
-            outputStream?.writeData(data)
-        } else {
-            // FIXME: handle error
-            NSLog("Could not encode handshake.")
+        if CFHTTPMessageCopyVersion(response)?.takeRetainedValue() != Const.HTTPVersion ||
+            CFHTTPMessageGetResponseStatusCode(response) != Const.UpgradeStatusCode ||
+            !hasHeaderNamed(HeaderKeys.Connection, withValue: HeaderValues.Upgrade) ||
+            !hasHeaderNamed(HeaderKeys.Upgrade, withValue: HeaderValues.WebSocket) ||
+            !hasHeaderNamed(HeaderKeys.SecWebSocketAccept, withValue: expectedAccept!) {
+                //FIXME: handle error
+                NSLog("Invalid response received:\n%@", NSString(data: data, encoding: NSASCIIStringEncoding))
+                return
         }
+
+        let data = CFHTTPMessageCopyBody(response)?.takeRetainedValue()
+        response = nil
+        state = .Open
+        delegate?.webSocketDidOpen(self)
+        if data != nil {
+            readData(data!)
+        }
+    }
+
+    private func readData(data: NSData) {
+        if inputBuffer == nil {
+            inputBuffer = NSMutableData(data: data)
+        } else {
+            inputBuffer?.appendData(data)
+        }
+        NSLog("Have %@ bytes of data", "\(inputBuffer!.length)")
     }
 
 }
@@ -206,7 +257,14 @@ extension WebSocket {
 extension WebSocket: DataInputStreamDelegate {
 
     func dataInputStream(dataInputStream: DataInputStream, didReadData data: NSData) {
-        NSLog("%@\n%@", __FUNCTION__, NSString(data: data, encoding: NSASCIIStringEncoding))
+        switch state {
+        case .Connecting:
+            readHandshakeData(data)
+        case .Open:
+            readData(data)
+        default:
+            break
+        }
     }
 
     func dataInputStream(dataInputStream: DataInputStream, didCloseWithError error: NSError) {
