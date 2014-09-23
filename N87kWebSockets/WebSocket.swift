@@ -122,6 +122,7 @@ extension WebSocket {
         static let SecWebSocketAccept: NSString = "Sec-WebSocket-Accept"
         static let SecWebSocketKey: NSString = "Sec-WebSocket-Key"
         static let SecWebSocketVersion: NSString = "Sec-WebSocket-Version"
+        static let SecWebSocketExtensions: NSString = "Sec-WebSocket-Extensions"
         static let Upgrade: NSString = "Upgrade"
     }
 
@@ -234,7 +235,8 @@ extension WebSocket {
             CFHTTPMessageGetResponseStatusCode(response) != Const.UpgradeStatusCode ||
             !hasHeaderNamed(HeaderKeys.Connection, withValue: HeaderValues.Upgrade) ||
             !hasHeaderNamed(HeaderKeys.Upgrade, withValue: HeaderValues.WebSocket) ||
-            !hasHeaderNamed(HeaderKeys.SecWebSocketAccept, withValue: expectedAccept!) {
+            !hasHeaderNamed(HeaderKeys.SecWebSocketAccept, withValue: expectedAccept!) ||
+            CFHTTPMessageCopyHeaderFieldValue(response, HeaderKeys.SecWebSocketExtensions)?.takeRetainedValue() != nil {
                 //FIXME: handle error
                 NSLog("Invalid response received:\n%@", NSString(data: data, encoding: NSASCIIStringEncoding))
                 return
