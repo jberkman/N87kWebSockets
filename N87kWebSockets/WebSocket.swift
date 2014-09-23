@@ -24,9 +24,7 @@
 //  IN THE SOFTWARE.
 //
 
-import CFNetwork
 import Foundation
-import Security
 
 public enum Scheme: String {
     case WS = "ws"
@@ -94,9 +92,6 @@ public class WebSocket: NSObject {
     public convenience init(request: NSURLRequest, delegate: WebSocketDelegate) {
         self.init(request: request, subprotocols: [String](), delegate: delegate)
     }
-}
-
-extension WebSocket {
 }
 
 extension WebSocket {
