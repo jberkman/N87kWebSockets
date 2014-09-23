@@ -52,6 +52,8 @@ public class WebSocket: NSObject {
             switch state {
             case .Connecting:
                 expectedAccept = nil
+            case .Open:
+                delegate?.webSocketDidOpen(self)
             default:
                 break
             }
@@ -245,7 +247,6 @@ extension WebSocket {
         let data = CFHTTPMessageCopyBody(response)?.takeRetainedValue()
         response = nil
         state = .Open
-        delegate?.webSocketDidOpen(self)
         if data != nil {
             readData(data!)
         }
