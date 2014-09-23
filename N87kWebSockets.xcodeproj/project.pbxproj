@@ -28,7 +28,6 @@
 		16AE118119CE2438003E9B4B /* WebSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
 		16E8E86319CF8534005DAB67 /* DataOutputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataOutputStream.swift; sourceTree = "<group>"; };
 		16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataInputStream.swift; sourceTree = "<group>"; };
-		16E8E89019D003E0005DAB67 /* N87kSwiftSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = N87kSwiftSupport.framework; path = "../N87kSwiftSupport/build/Debug-iphoneos/N87kSwiftSupport.framework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,7 +51,6 @@
 		16AE115C19CE1DD3003E9B4B = {
 			isa = PBXGroup;
 			children = (
-				16E8E89019D003E0005DAB67 /* N87kSwiftSupport.framework */,
 				16AE116819CE1DD3003E9B4B /* N87kWebSockets */,
 				16AE117219CE1DD3003E9B4B /* N87kWebSocketsTests */,
 				16AE116719CE1DD3003E9B4B /* Products */,
