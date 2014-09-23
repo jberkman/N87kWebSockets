@@ -1,8 +1,8 @@
 //
-//  N87kWebSockets.h
+//  NSString+N87kWebSockets.h
 //  N87kWebSockets
 //
-//  Created by jacob berkman on 9/20/14.
+//  Created by jacob berkman on 9/22/14.
 //  Copyright © 2014 jacob berkman
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,14 +24,10 @@
 //  IN THE SOFTWARE.
 //
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
-//! Project version number for N87kWebSockets.
-FOUNDATION_EXPORT double N87kWebSocketsVersionNumber;
+@interface NSString (N87kWebSockets)
 
-//! Project version string for N87kWebSockets.
-FOUNDATION_EXPORT const unsigned char N87kWebSocketsVersionString[];
+@property (nonatomic, readonly) NSString *N87k_SHA1Digest;
 
-// In this header, you should import all the public headers of your framework using statements like #import <N87kWebSockets/PublicHeader.h>
-
-#import <N87kWebSockets/NSString+N87kWebSockets.h>
+@end

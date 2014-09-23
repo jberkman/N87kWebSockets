@@ -28,8 +28,6 @@ import CFNetwork
 import Foundation
 import Security
 
-import N87kSwiftSupport
-
 public enum Scheme: String {
     case WS = "ws"
     case WSS = "wss"
