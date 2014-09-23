@@ -146,16 +146,19 @@ extension WebSocket {
     }
 
     private func readHandshakeData(data: NSData) {
-        if let (response, data) = handshake!.parseData(data) {
-            self.handshake = nil
-            if response != nil {
-                self.state = .Open
-            } else {
-                // FIXME: Notify delegate of error
-                return
-            }
+        switch handshake!.parseData(data) {
+        case .Incomplete:
+            break
+
+        case .Invalid:
+            // FIXME: Notify delegate of error
+            NSLog("Invalid handshake.")
+
+        case .Response(let response, let data):
+            handshake = nil
+            state = .Open
             if data != nil {
-                self.readData(data!)
+                readData(data!)
             }
         }
     }

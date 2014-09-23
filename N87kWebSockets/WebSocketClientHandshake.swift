@@ -29,6 +29,12 @@ import Foundation
 import Security
 
 class WebSocketClientHandshake: NSObject {
+    enum Handshake {
+        case Incomplete
+        case Invalid
+        case Response(NSHTTPURLResponse, NSData?)
+    }
+
     private let request: NSURLRequest
     private let responseMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(0)).takeRetainedValue()
     private lazy var key: String? = {
@@ -105,10 +111,10 @@ class WebSocketClientHandshake: NSObject {
         return CFHTTPMessageCopySerializedMessage(requestMessage)?.takeRetainedValue()
     }
 
-    func parseData(data: NSData) -> (NSHTTPURLResponse?, NSData?)? {
+    func parseData(data: NSData) -> Handshake {
         CFHTTPMessageAppendBytes(responseMessage, UnsafePointer<UInt8>(data.bytes), data.length)
         if CFHTTPMessageIsHeaderComplete(responseMessage) == Boolean(0) {
-            return nil
+            return .Incomplete
         }
 
         var response: NSHTTPURLResponse?
@@ -121,11 +127,12 @@ class WebSocketClientHandshake: NSObject {
                     headerFields[HeaderKeys.Upgrade]?.lowercaseString == HeaderValues.WebSocket &&
                     headerFields[HeaderKeys.SecWebSocketAccept]?.lowercaseString == expectedAccept &&
                     headerFields[HeaderKeys.SecWebSocketExtensions] == nil {
-                        response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields)
-                        responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue()
+                        let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields)
+                        let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue()
+                        return .Response(response, responseData)
                 }
             }
         }
-        return (response, responseData)
+        return .Invalid
     }
 }
