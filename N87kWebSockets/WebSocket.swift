@@ -194,6 +194,14 @@ extension WebSocket {
             HeaderKeys.SecWebSocketVersion: HeaderValues.Version,
             HeaderKeys.SecWebSocketKey: key!
         ]
+        if let requestHeaders = currentRequest.allHTTPHeaderFields as? [NSString: NSString] {
+            for (k, v) in requestHeaders {
+                if headers[k] == nil {
+                    CFHTTPMessageSetHeaderFieldValue(request, k, v)
+                }
+            }
+
+        }
         for (k, v) in headers {
             CFHTTPMessageSetHeaderFieldValue(request, k, v)
         }
