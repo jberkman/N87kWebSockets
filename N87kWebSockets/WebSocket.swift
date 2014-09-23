@@ -146,7 +146,7 @@ extension WebSocket {
     }
 
     private func readHandshakeData(data: NSData) {
-        handshake!.parseData(data) { response, data in
+        if let (response, data) = handshake!.parseData(data) {
             self.handshake = nil
             if response != nil {
                 self.state = .Open

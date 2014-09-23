@@ -31,7 +31,18 @@ import Security
 class WebSocketClientHandshake: NSObject {
     private let request: NSURLRequest
     private let responseMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(0)).takeRetainedValue()
-    private var expectedAccept: String?
+    private lazy var key: String? = {
+        let keyLength = 16
+        let data = NSMutableData(length: keyLength)
+        if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) != 0 {
+            NSLog("Could not generate random key");
+            return nil
+        }
+        return data.base64EncodedStringWithOptions(nil)
+    }()
+    private var expectedAccept: String {
+        return "\(key!)\(Const.GUID)".N87k_SHA1Digest
+    }
 
     private struct Const {
         static let HTTPVersion: NSString = "HTTP/1.1"
@@ -60,28 +71,15 @@ class WebSocketClientHandshake: NSObject {
         super.init()
     }
 
-    private class func generateKey() -> String? {
-        let keyLength = 16
-        let data = NSMutableData(length: keyLength)
-        if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) != 0 {
-            return nil
-        }
-        return data.base64EncodedStringWithOptions(nil)
-    }
-
     private var scheme: Scheme? {
         return request.URL.scheme != nil ? Scheme.fromRaw(request.URL.scheme!) : nil
     }
 
     var requestData: NSData? {
-        let key = self.dynamicType.generateKey()
         if key == nil {
-            NSLog("Could not generate random key");
-            // FIXME
             return nil
         }
 
-        expectedAccept = "\(key!)\(Const.GUID)".N87k_SHA1Digest
         let port = request.URL.port != nil && request.URL.port != scheme!.defaultPort ? ":\(request.URL.port!)" : ""
 
         let requestMessage = CFHTTPMessageCreateRequest(kCFAllocatorDefault, request.HTTPMethod! as NSString, request.URL, Const.HTTPVersion).takeRetainedValue()
@@ -107,10 +105,10 @@ class WebSocketClientHandshake: NSObject {
         return CFHTTPMessageCopySerializedMessage(requestMessage)?.takeRetainedValue()
     }
 
-    func parseData(data: NSData, completion: (NSHTTPURLResponse?, NSData?) -> Void) {
+    func parseData(data: NSData) -> (NSHTTPURLResponse?, NSData?)? {
         CFHTTPMessageAppendBytes(responseMessage, UnsafePointer<UInt8>(data.bytes), data.length)
         if CFHTTPMessageIsHeaderComplete(responseMessage) == Boolean(0) {
-            return
+            return nil
         }
 
         var response: NSHTTPURLResponse?
@@ -128,6 +126,6 @@ class WebSocketClientHandshake: NSObject {
                 }
             }
         }
-        completion(response, responseData)
+        return (response, responseData)
     }
 }
