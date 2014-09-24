@@ -75,7 +75,7 @@ public class WebSocket: NSObject {
     public let subprotocols: [String]
 
     private var inputStream: DataInputStream?
-    private var handshake: WebSocketClientHandshake?
+    private var handshake: ClientHandshake?
     private var frameInputStream: FrameInputStream?
 
     private var outputStream: DataOutputStream?
@@ -143,7 +143,7 @@ extension WebSocket {
         input!.open()
         output!.open()
 
-        handshake = WebSocketClientHandshake(request: currentRequest)
+        handshake = ClientHandshake(request: currentRequest)
         if let data = handshake!.requestData {
             outputStream!.writeData(data)
         } else {

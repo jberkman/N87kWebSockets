@@ -1,5 +1,5 @@
 //
-//  WebSocketClientHandshake.swift
+//  ClientHandshake.swift
 //  N87kWebSockets
 //
 //  Created by jacob berkman on 9/22/14.
@@ -28,8 +28,8 @@ import CFNetwork
 import Foundation
 import Security
 
-class WebSocketClientHandshake: NSObject {
-    enum Handshake {
+class ClientHandshake: NSObject {
+    enum ParseResult {
         case Incomplete
         case Invalid
         case Response(NSHTTPURLResponse, NSData?)
@@ -111,7 +111,7 @@ class WebSocketClientHandshake: NSObject {
         return CFHTTPMessageCopySerializedMessage(requestMessage)?.takeRetainedValue()
     }
 
-    func parseData(data: NSData) -> Handshake {
+    func parseData(data: NSData) -> ParseResult {
         CFHTTPMessageAppendBytes(responseMessage, UnsafePointer<UInt8>(data.bytes), data.length)
         if CFHTTPMessageIsHeaderComplete(responseMessage) == Boolean(0) {
             return .Incomplete
