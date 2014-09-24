@@ -1,5 +1,5 @@
 //
-//  FrameInputStream.swift
+//  FrameTokenizer.swift
 //  N87kWebSockets
 //
 //  Created by jacob berkman on 9/22/14.
@@ -26,13 +26,13 @@
 
 import Foundation
 
-protocol FrameInputStreamDelegate: NSObjectProtocol {
-    func frameInputStream(frameInputStream: FrameInputStream, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit))
-    func frameInputStream(frameInputStream: FrameInputStream, didReadData data: NSData)
-    func frameInputStreamDidEndFrame(frameInputStream: FrameInputStream)
+protocol FrameTokenizerDelegate: NSObjectProtocol {
+    func frameTokenizer(frameTokenizer: FrameTokenizer, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit))
+    func frameTokenizer(frameTokenizer: FrameTokenizer, didReadData data: NSData)
+    func frameTokenizerDidEndFrame(frameTokenizer: FrameTokenizer)
 }
 
-class FrameInputStream: NSObject {
+class FrameTokenizer: NSObject {
 
     private struct Const {
         static let ExtendedPayload16 = UInt8(126)
@@ -57,7 +57,7 @@ class FrameInputStream: NSObject {
         super.init()
     }
 
-    var delegate: FrameInputStreamDelegate?
+    var delegate: FrameTokenizerDelegate?
 
     func readData(data: NSData) -> NSError? {
         if data.length == 0 {
@@ -75,7 +75,7 @@ class FrameInputStream: NSObject {
                         state = .Error
                         return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.toRaw(), userInfo: nil)
                     }
-                    delegate?.frameInputStream(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
+                    delegate?.frameTokenizer(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
                 } else {
                     state = .Error
                     return NSError(domain: ErrorDomain, code: Errors.InvalidOpCode.toRaw(), userInfo: nil)
@@ -114,10 +114,10 @@ class FrameInputStream: NSObject {
             case .UnmaskedData(let bytesRemaining):
                 let bytesRead64 = min(bytesRemaining, UInt64(p.distanceTo(finish)))
                 let bytesRead = Int(bytesRead64)
-                delegate?.frameInputStream(self, didReadData: NSData(bytes: UnsafePointer<Void>(p), length: bytesRead))
+                delegate?.frameTokenizer(self, didReadData: NSData(bytes: UnsafePointer<Void>(p), length: bytesRead))
                 p += bytesRead - 1 // take into account loop increment
                 if bytesRemaining == bytesRead64 {
-                    delegate?.frameInputStreamDidEndFrame(self)
+                    delegate?.frameTokenizerDidEndFrame(self)
                     state = .OpCode
                 } else {
                     state = .UnmaskedData(bytesRemaining: bytesRemaining - bytesRead64)
@@ -152,9 +152,9 @@ class FrameInputStream: NSObject {
 /*
         switch state {
         case .MaskedData(let bytesRemaining, let mask, let maskOffset, .Some(data)):
-            delegate?.frameInputStream(self, didReadData: data)
+            delegate?.frameTokenizer(self, didReadData: data)
             if bytesRemaining == 0 {
-                delegate?.frameInputStreamDidEndFrame(self)
+                delegate?.frameTokenizerDidEndFrame(self)
                 state = .OpCode
             } else {
                 state = .MaskedData(bytesRemaining, mask, maskOffset, nil)

@@ -62,7 +62,7 @@ public class WebSocket: NSObject {
 
     private var inputStream: DataInputStream?
     private var handshake: ClientHandshake?
-    private var frameInputStream: FrameInputStream?
+    private var frameTokenizer: FrameTokenizer?
 
     private var outputStream: DataOutputStream?
 
@@ -156,10 +156,10 @@ extension WebSocket {
     }
 
     private func readData(data: NSData) {
-        if frameInputStream == nil {
-            frameInputStream = FrameInputStream(masked: false)
+        if frameTokenizer == nil {
+            frameTokenizer = FrameTokenizer(masked: false)
         }
-        if let error = frameInputStream!.readData(data) {
+        if let error = frameTokenizer!.readData(data) {
             NSLog("Invalid data: %@", error)
         }
     }
