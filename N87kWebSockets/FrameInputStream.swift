@@ -26,34 +26,6 @@
 
 import Foundation
 
-//    0                   1                   2                   3
-//    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-//    +-+-+-+-+-------+-+-------------+-------------------------------+
-//    |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
-//    |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
-//    |N|V|V|V|       |S|             |   (if payload len==126/127)   |
-//    | |1|2|3|       |K|             |                               |
-//    +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
-//    |     Extended payload length continued, if payload len == 127  |
-//    + - - - - - - - - - - - - - - - +-------------------------------+
-//    |                               |Masking-key, if MASK set to 1  |
-//    +-------------------------------+-------------------------------+
-//    | Masking-key (continued)       |          Payload Data         |
-//    +-------------------------------- - - - - - - - - - - - - - - - +
-//    :                     Payload Data continued ...                :
-//    + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-//    |                     Payload Data continued ...                |
-//    +---------------------------------------------------------------+
-
-enum OpCode: UInt8 {
-    case Continuation = 0x0
-    case Text = 0x1
-    case Binary = 0x2
-    case ConnectionClose = 0x8
-    case Ping = 0x9
-    case Pong = 0xA
-}
-
 protocol FrameInputStreamDelegate: NSObjectProtocol {
     func frameInputStream(frameInputStream: FrameInputStream, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit))
     func frameInputStream(frameInputStream: FrameInputStream, didReadData data: NSData)
@@ -74,17 +46,6 @@ class FrameInputStream: NSObject {
         case MaskingKey(bytesRemaining: UInt64, mask: [UInt8])
         case MaskedData(bytesRemaining: UInt64, mask: [UInt8], maskOffset: Int, buffer: NSMutableData?)
         case Error
-    }
-
-    private struct Masks {
-        static let Fin = UInt8(0x80)
-        static let Rsv1 = UInt8(0x40)
-        static let Rsv2 = UInt8(0x20)
-        static let Rsv3 = UInt8(0x10)
-        static let OpCode = UInt8(0x7)
-
-        static let Mask = UInt8(0x80)
-        static let PayloadLen = UInt8(0x7f)
     }
 
     private var state = ParseState.OpCode
@@ -109,12 +70,12 @@ class FrameInputStream: NSObject {
             let byte = p.memory
             switch state {
             case .OpCode:
-                if let opCode = OpCode.fromRaw(byte & Masks.OpCode) {
-                    if byte & (Masks.Rsv1 | Masks.Rsv2 | Masks.Rsv3) != 0 {
+                if let opCode = OpCode.fromRaw(byte & HeaderHeaderMasks.OpCode) {
+                    if byte & (HeaderMasks.Rsv1 | HeaderMasks.Rsv2 | HeaderMasks.Rsv3) != 0 {
                         state = .Error
                         return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.toRaw(), userInfo: nil)
                     }
-                    delegate?.frameInputStream(self, didBeginFrameWithOpCode: opCode, isFinal: byte & Masks.Fin == Masks.Fin, reservedBits: (.Zero, .Zero, .Zero))
+                    delegate?.frameInputStream(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
                 } else {
                     state = .Error
                     return NSError(domain: ErrorDomain, code: Errors.InvalidOpCode.toRaw(), userInfo: nil)
@@ -122,11 +83,11 @@ class FrameInputStream: NSObject {
                 state = .Length
 
             case .Length:
-                if (byte & Masks.Mask == Masks.Mask) != masked {
+                if (byte & HeaderMasks.Mask == HeaderMasks.Mask) != masked {
                     state = .Error
                     return NSError(domain: ErrorDomain, code: Errors.InvalidMask.toRaw(), userInfo: nil)
                 }
-                switch (byte & Masks.PayloadLen, masked) {
+                switch (byte & HeaderMasks.PayloadLen, masked) {
                 case (Const.ExtendedPayload16, _):
                     state = .ExtendedLength(length: 0, shiftOffset: 8)
                 case (Const.ExtendedPayload64, _):

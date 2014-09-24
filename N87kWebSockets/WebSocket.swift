@@ -26,20 +26,6 @@
 
 import Foundation
 
-public let ErrorDomain = "N87kWebSocketErrorDomain"
-
-public enum Errors: Int {
-    case InvalidOpCode = 1, InvalidReservedBit, InvalidMask
-}
-
-public enum Scheme: String {
-    case WS = "ws"
-    case WSS = "wss"
-
-    public var isSecure: Bool { return self == WSS }
-    public var defaultPort: Int { return self == WS ? 80 : 443 }
-}
-
 public protocol WebSocketDelegate: NSObjectProtocol {
     func webSocketDidOpen(webSocket: WebSocket)
     func webSocketDidClose(webSocket: WebSocket)
