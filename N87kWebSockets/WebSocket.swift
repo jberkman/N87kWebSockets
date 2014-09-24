@@ -26,6 +26,12 @@
 
 import Foundation
 
+public let ErrorDomain = "N87kWebSocketErrorDomain"
+
+public enum Errors: Int {
+    case InvalidOpCode = 1, InvalidReservedBit, InvalidMask
+}
+
 public enum Scheme: String {
     case WS = "ws"
     case WSS = "wss"
@@ -70,7 +76,7 @@ public class WebSocket: NSObject {
 
     private var inputStream: DataInputStream?
     private var handshake: WebSocketClientHandshake?
-    private var inputBuffer: NSMutableData?
+    private var frameInputStream: FrameInputStream?
 
     private var outputStream: DataOutputStream?
 
@@ -164,12 +170,12 @@ extension WebSocket {
     }
 
     private func readData(data: NSData) {
-        if inputBuffer == nil {
-            inputBuffer = NSMutableData(data: data)
-        } else {
-            inputBuffer?.appendData(data)
+        if frameInputStream == nil {
+            frameInputStream = FrameInputStream(masked: false)
         }
-        NSLog("Have %@ bytes of data", "\(inputBuffer!.length)")
+        if let error = frameInputStream!.readData(data) {
+            NSLog("Invalid data: %@", error)
+        }
     }
 
 }

@@ -125,7 +125,7 @@ class WebSocketClientHandshake: NSObject {
                 if HTTPVersion == Const.HTTPVersion && statusCode == Const.UpgradeStatusCode &&
                     headerFields[HeaderKeys.Connection]?.lowercaseString == HeaderValues.Upgrade &&
                     headerFields[HeaderKeys.Upgrade]?.lowercaseString == HeaderValues.WebSocket &&
-                    headerFields[HeaderKeys.SecWebSocketAccept]?.lowercaseString == expectedAccept &&
+                    headerFields[HeaderKeys.SecWebSocketAccept] as? NSString == expectedAccept &&
                     headerFields[HeaderKeys.SecWebSocketExtensions] == nil {
                         let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields)
                         let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue()
