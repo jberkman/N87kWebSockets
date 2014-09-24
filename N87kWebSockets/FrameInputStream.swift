@@ -70,7 +70,7 @@ class FrameInputStream: NSObject {
             let byte = p.memory
             switch state {
             case .OpCode:
-                if let opCode = OpCode.fromRaw(byte & HeaderHeaderMasks.OpCode) {
+                if let opCode = OpCode.fromRaw(byte & HeaderMasks.OpCode) {
                     if byte & (HeaderMasks.Rsv1 | HeaderMasks.Rsv2 | HeaderMasks.Rsv3) != 0 {
                         state = .Error
                         return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.toRaw(), userInfo: nil)
