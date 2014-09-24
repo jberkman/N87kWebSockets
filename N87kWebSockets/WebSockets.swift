@@ -65,6 +65,11 @@ struct HeaderMasks {
     static let PayloadLen = UInt8(0x7f)
 }
 
+struct ExtendedLength {
+    static let Short = UInt8(126)
+    static let Long = UInt8(127)
+}
+
 public let ErrorDomain = "N87kWebSocketErrorDomain"
 
 public enum Errors: Int {

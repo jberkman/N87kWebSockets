@@ -34,21 +34,16 @@ protocol FrameTokenizerDelegate: NSObjectProtocol {
 
 class FrameTokenizer: NSObject {
 
-    private struct Const {
-        static let ExtendedPayload16 = UInt8(126)
-        static let ExtendedPayload64 = UInt8(127)
-    }
-
-    private enum ParseState {
+    private enum State {
         case OpCode, Length
-        case ExtendedLength(length: UInt64, shiftOffset: UInt64)
+        case ExtendedLength(length: UInt64, shiftOffset: Int)
         case UnmaskedData(bytesRemaining: UInt64)
         case MaskingKey(bytesRemaining: UInt64, mask: [UInt8])
         case MaskedData(bytesRemaining: UInt64, mask: [UInt8], maskOffset: Int, buffer: NSMutableData?)
         case Error
     }
 
-    private var state = ParseState.OpCode
+    private var state = State.OpCode
 
     private let masked: Bool
     init(masked: Bool) {
@@ -88,10 +83,10 @@ class FrameTokenizer: NSObject {
                     return NSError(domain: ErrorDomain, code: Errors.InvalidMask.toRaw(), userInfo: nil)
                 }
                 switch (byte & HeaderMasks.PayloadLen, masked) {
-                case (Const.ExtendedPayload16, _):
-                    state = .ExtendedLength(length: 0, shiftOffset: 8)
-                case (Const.ExtendedPayload64, _):
-                    state = .ExtendedLength(length: 0, shiftOffset: 56)
+                case (ExtendedLength.Short, _):
+                    state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt16) - sizeof(UInt8))
+                case (ExtendedLength.Long, _):
+                    state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt64) - sizeof(UInt8))
                 case (let payloadLen, true):
                     state = .MaskingKey(bytesRemaining: UInt64(payloadLen), mask: [UInt8]())
                 case (let payloadLen, false):
@@ -109,7 +104,7 @@ class FrameTokenizer: NSObject {
                 }
 
             case .ExtendedLength(let length, let shiftOffset):
-                state = .ExtendedLength(length: length + UInt64(byte) << shiftOffset, shiftOffset: shiftOffset >> 4)
+                state = .ExtendedLength(length: length + UInt64(byte) << UInt64(shiftOffset), shiftOffset: shiftOffset - sizeof(UInt8))
 
             case .UnmaskedData(let bytesRemaining):
                 let bytesRead64 = min(bytesRemaining, UInt64(p.distanceTo(finish)))

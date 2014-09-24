@@ -41,6 +41,9 @@ public class WebSocket: NSObject {
         didSet {
             switch state {
             case .Open:
+                frameTokenizer = FrameTokenizer(masked: false)
+                frameTokenizer!.delegate = self
+                frameSerializer = FrameSerializer(masked: true)
                 delegate?.webSocketDidOpen(self)
             default:
                 break
@@ -63,8 +66,10 @@ public class WebSocket: NSObject {
     private var inputStream: DataInputStream?
     private var handshake: ClientHandshake?
     private var frameTokenizer: FrameTokenizer?
+    private var inputBuffer: NSMutableData?
 
     private var outputStream: DataOutputStream?
+    private var frameSerializer: FrameSerializer?
 
     public init(request: NSURLRequest, subprotocols: [String], delegate: WebSocketDelegate) {
         originalRequest = request
@@ -83,6 +88,17 @@ public class WebSocket: NSObject {
 
     public convenience init(request: NSURLRequest, delegate: WebSocketDelegate) {
         self.init(request: request, subprotocols: [String](), delegate: delegate)
+    }
+
+    public func writeText(text: String) -> Bool {
+        if let data = text.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false) {
+            if let header = frameSerializer!.beginFrameWithOpCode(.Text, isFinal: true, length: UInt64(data.length)) {
+                outputStream!.writeData(header)
+                outputStream!.writeData(frameSerializer!.maskedData(data))
+                return true
+            }
+        }
+        return false
     }
 }
 
@@ -156,9 +172,6 @@ extension WebSocket {
     }
 
     private func readData(data: NSData) {
-        if frameTokenizer == nil {
-            frameTokenizer = FrameTokenizer(masked: false)
-        }
         if let error = frameTokenizer!.readData(data) {
             NSLog("Invalid data: %@", error)
         }
@@ -193,6 +206,32 @@ extension WebSocket: DataOutputStreamDelegate {
 
     func dataOutputStream(dataOutputStream: DataOutputStream, didCloseWithError error: NSError) {
         NSLog("%@ %@", __FUNCTION__, error)
+    }
+
+}
+
+extension WebSocket: FrameTokenizerDelegate {
+
+    func frameTokenizer(frameTokenizer: FrameTokenizer, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit)) {
+        NSLog("Got frame with opCode: %@", "\(opCode.toRaw())")
+        if opCode == OpCode.Text {
+            inputBuffer = NSMutableData()
+        }
+    }
+
+    func frameTokenizer(frameTokenizer: FrameTokenizer, didReadData data: NSData) {
+        inputBuffer?.appendData(data)
+    }
+
+    func frameTokenizerDidEndFrame(frameTokenizer: FrameTokenizer) {
+        NSLog("Ended frame.")
+        if inputBuffer != nil {
+            let text: NSString? = NSString(data: inputBuffer!, encoding: NSUTF8StringEncoding)
+            if text != nil {
+                NSLog("Got text: %@", text!)
+            }
+            inputBuffer = nil
+        }
     }
 
 }
