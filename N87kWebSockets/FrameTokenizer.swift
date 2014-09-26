@@ -118,7 +118,6 @@ class FrameTokenizer: NSObject {
                     state = .UnmaskedData(bytesRemaining: bytesRemaining - bytesRead64)
                 }
 
-/*
             case .MaskingKey(let bytesRemaining, let mask):
                 let newMask = mask + [byte]
                 if mask.count < 4 {
@@ -139,23 +138,23 @@ class FrameTokenizer: NSObject {
                 buffer.increaseLengthBy(1)
                 UnsafeMutablePointer<UInt8>(buffer.mutableBytes)[buffer.length - 1] = byte ^ mask[maskOffset]
                 state = .MaskedData(bytesRemaining - UInt64(1), mask, (maskOffset + 1) % mask.count, buffer)
-*/
+
             default:
                 fatalError("Unexpected state while parsing.")
             }
         }
-/*
+
         switch state {
+        case .MaskedData(0, _, _, .Some(data)):
+            delegate?.frameTokenizer(self, didReadData: data)
+            delegate?.frameTokenizerDidEndFrame(self)
+            state = .OpCode
+
         case .MaskedData(let bytesRemaining, let mask, let maskOffset, .Some(data)):
             delegate?.frameTokenizer(self, didReadData: data)
-            if bytesRemaining == 0 {
-                delegate?.frameTokenizerDidEndFrame(self)
-                state = .OpCode
-            } else {
-                state = .MaskedData(bytesRemaining, mask, maskOffset, nil)
-            }
+            state = .MaskedData(bytesRemaining, mask, maskOffset, nil)
         }
-*/
+
         return nil
     }
 

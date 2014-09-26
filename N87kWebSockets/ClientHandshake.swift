@@ -29,13 +29,13 @@ import Foundation
 import Security
 
 class ClientHandshake: NSObject {
-    enum ParseResult {
+    enum Result {
         case Incomplete
         case Invalid
         case Response(NSHTTPURLResponse, NSData?)
     }
 
-    private let request: NSURLRequest
+    let request: NSURLRequest
     private let responseMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(0)).takeRetainedValue()
     private lazy var key: String? = {
         let keyLength = 16
@@ -111,7 +111,7 @@ class ClientHandshake: NSObject {
         return CFHTTPMessageCopySerializedMessage(requestMessage)?.takeRetainedValue()
     }
 
-    func parseData(data: NSData) -> ParseResult {
+    func readData(data: NSData) -> Result {
         CFHTTPMessageAppendBytes(responseMessage, UnsafePointer<UInt8>(data.bytes), data.length)
         if CFHTTPMessageIsHeaderComplete(responseMessage) == Boolean(0) {
             return .Incomplete
