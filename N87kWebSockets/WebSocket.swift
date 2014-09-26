@@ -58,7 +58,7 @@ public class WebSocket: NSObject {
     public let originalRequest: NSURLRequest
     public var currentRequest: NSURLRequest { return _currentRequest }
     private var scheme: Scheme? {
-        return currentRequest.URL.scheme != nil ? Scheme.fromRaw(currentRequest.URL.scheme!) : nil
+        return currentRequest.URL.scheme != nil ? Scheme(rawValue: currentRequest.URL.scheme!) : nil
     }
 
     public let subprotocols: [String]
@@ -213,7 +213,7 @@ extension WebSocket: DataOutputStreamDelegate {
 extension WebSocket: FrameTokenizerDelegate {
 
     func frameTokenizer(frameTokenizer: FrameTokenizer, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit)) {
-        NSLog("Got frame with opCode: %@", "\(opCode.toRaw())")
+        NSLog("Got frame with opCode: %@", "\(opCode.rawValue)")
         if opCode == OpCode.Text {
             inputBuffer = NSMutableData()
         }

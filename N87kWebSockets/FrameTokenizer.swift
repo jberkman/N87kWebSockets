@@ -65,22 +65,22 @@ class FrameTokenizer: NSObject {
             let byte = p.memory
             switch state {
             case .OpCode:
-                if let opCode = OpCode.fromRaw(byte & HeaderMasks.OpCode) {
+                if let opCode = OpCode(rawValue: byte & HeaderMasks.OpCode) {
                     if byte & (HeaderMasks.Rsv1 | HeaderMasks.Rsv2 | HeaderMasks.Rsv3) != 0 {
                         state = .Error
-                        return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.toRaw(), userInfo: nil)
+                        return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.rawValue, userInfo: nil)
                     }
                     delegate?.frameTokenizer(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
                 } else {
                     state = .Error
-                    return NSError(domain: ErrorDomain, code: Errors.InvalidOpCode.toRaw(), userInfo: nil)
+                    return NSError(domain: ErrorDomain, code: Errors.InvalidOpCode.rawValue, userInfo: nil)
                 }
                 state = .Length
 
             case .Length:
                 if (byte & HeaderMasks.Mask == HeaderMasks.Mask) != masked {
                     state = .Error
-                    return NSError(domain: ErrorDomain, code: Errors.InvalidMask.toRaw(), userInfo: nil)
+                    return NSError(domain: ErrorDomain, code: Errors.InvalidMask.rawValue, userInfo: nil)
                 }
                 switch (byte & HeaderMasks.PayloadLen, masked) {
                 case (ExtendedLength.Short, _):

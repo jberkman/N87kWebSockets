@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1605653719D5175D00B8622A /* NSHTTPURLResponse+Hacks.h in Headers */ = {isa = PBXBuildFile; fileRef = 1605653519D5175D00B8622A /* NSHTTPURLResponse+Hacks.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1605653819D5175D00B8622A /* NSHTTPURLResponse+Hacks.m in Sources */ = {isa = PBXBuildFile; fileRef = 1605653619D5175D00B8622A /* NSHTTPURLResponse+Hacks.m */; };
 		160C637019D31C3B000E56FC /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C636F19D31C3B000E56FC /* WebSockets.swift */; };
 		160C637219D31EBB000E56FC /* FrameSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C637119D31EBB000E56FC /* FrameSerializer.swift */; };
 		162E6FA219D10C4B00E384D1 /* NSString+N87kWebSockets.m in Sources */ = {isa = PBXBuildFile; fileRef = 162E6FA019D10C4B00E384D1 /* NSString+N87kWebSockets.m */; };
@@ -21,6 +23,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1605653519D5175D00B8622A /* NSHTTPURLResponse+Hacks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+Hacks.h"; sourceTree = "<group>"; };
+		1605653619D5175D00B8622A /* NSHTTPURLResponse+Hacks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSHTTPURLResponse+Hacks.m"; sourceTree = "<group>"; };
 		160C636F19D31C3B000E56FC /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
 		160C637119D31EBB000E56FC /* FrameSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameSerializer.swift; sourceTree = "<group>"; };
 		162E6FA019D10C4B00E384D1 /* NSString+N87kWebSockets.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+N87kWebSockets.m"; sourceTree = "<group>"; };
@@ -77,6 +81,8 @@
 		16AE116819CE1DD3003E9B4B /* N87kWebSockets */ = {
 			isa = PBXGroup;
 			children = (
+				1605653519D5175D00B8622A /* NSHTTPURLResponse+Hacks.h */,
+				1605653619D5175D00B8622A /* NSHTTPURLResponse+Hacks.m */,
 				160C637119D31EBB000E56FC /* FrameSerializer.swift */,
 				16CFFB7519D118A8006650C9 /* FrameTokenizer.swift */,
 				160C636F19D31C3B000E56FC /* WebSockets.swift */,
@@ -126,6 +132,7 @@
 			files = (
 				162E6FA319D10C4B00E384D1 /* NSString+N87kWebSockets.h in Headers */,
 				16AE116C19CE1DD3003E9B4B /* N87kWebSockets.h in Headers */,
+				1605653719D5175D00B8622A /* NSHTTPURLResponse+Hacks.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -230,6 +237,7 @@
 				16AE118219CE2438003E9B4B /* WebSocket.swift in Sources */,
 				160C637019D31C3B000E56FC /* WebSockets.swift in Sources */,
 				162E6FA219D10C4B00E384D1 /* NSString+N87kWebSockets.m in Sources */,
+				1605653819D5175D00B8622A /* NSHTTPURLResponse+Hacks.m in Sources */,
 				160C637219D31EBB000E56FC /* FrameSerializer.swift in Sources */,
 				16CFFB7819D14C93006650C9 /* ClientHandshake.swift in Sources */,
 				16CFFB7919D28EC6006650C9 /* FrameTokenizer.swift in Sources */,

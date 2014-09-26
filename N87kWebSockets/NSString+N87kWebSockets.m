@@ -34,7 +34,7 @@
 - (NSString *)N87k_SHA1Digest {
     NSMutableData *data = [NSMutableData dataWithLength:CC_SHA1_DIGEST_LENGTH];
     const char *UTF8String = self.UTF8String;
-    CC_SHA1(UTF8String, strlen(UTF8String), data.mutableBytes);
+    CC_SHA1(UTF8String, (CC_LONG)strlen(UTF8String), data.mutableBytes);
     return [[data base64EncodedStringWithOptions:0] stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]];
 }
 

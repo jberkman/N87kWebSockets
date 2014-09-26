@@ -52,7 +52,7 @@ class FrameSerializer: NSObject {
 
             var bytes = UnsafeMutablePointer<UInt8>(data.mutableBytes)
 
-            bytes.memory = (isFinal ? HeaderMasks.Fin : 0) | opCode.toRaw()
+            bytes.memory = (isFinal ? HeaderMasks.Fin : 0) | opCode.rawValue
             bytes += 1
 
             bytes.memory = masked.masked ? HeaderMasks.Mask : 0

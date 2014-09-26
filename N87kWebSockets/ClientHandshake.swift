@@ -78,7 +78,7 @@ class ClientHandshake: NSObject {
     }
 
     private var scheme: Scheme? {
-        return request.URL.scheme != nil ? Scheme.fromRaw(request.URL.scheme!) : nil
+        return request.URL.scheme != nil ? Scheme(rawValue: request.URL.scheme!) : nil
     }
 
     var requestData: NSData? {
@@ -127,9 +127,10 @@ class ClientHandshake: NSObject {
                     headerFields[HeaderKeys.Upgrade]?.lowercaseString == HeaderValues.WebSocket &&
                     headerFields[HeaderKeys.SecWebSocketAccept] as? NSString == expectedAccept &&
                     headerFields[HeaderKeys.SecWebSocketExtensions] == nil {
-                        let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields)
-                        let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue()
-                        return .Response(response, responseData)
+                        if let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields) {
+                            let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue() as? AnyObject as? NSData
+                            return .Response(response, responseData)
+                        }
                 }
             }
         }

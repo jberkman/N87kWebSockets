@@ -24,7 +24,7 @@
 //  IN THE SOFTWARE.
 //
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 //! Project version number for N87kWebSockets.
 FOUNDATION_EXPORT double N87kWebSocketsVersionNumber;
@@ -35,3 +35,4 @@ FOUNDATION_EXPORT const unsigned char N87kWebSocketsVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <N87kWebSockets/PublicHeader.h>
 
 #import <N87kWebSockets/NSString+N87kWebSockets.h>
+#import <N87kWebSockets/NSHTTPURLResponse+Hacks.h>
