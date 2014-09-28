@@ -35,4 +35,3 @@ FOUNDATION_EXPORT const unsigned char N87kWebSocketsVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <N87kWebSockets/PublicHeader.h>
 
 #import <N87kWebSockets/NSString+N87kWebSockets.h>
-#import <N87kWebSockets/NSHTTPURLResponse+Hacks.h>

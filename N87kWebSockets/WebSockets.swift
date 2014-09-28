@@ -52,6 +52,9 @@ enum OpCode: UInt8 {
     case ConnectionClose = 0x8
     case Ping = 0x9
     case Pong = 0xA
+    var isControl: Bool {
+        return rawValue & 0xF0 != 0
+    }
 }
 
 struct HeaderMasks {
@@ -73,13 +76,41 @@ struct ExtendedLength {
 public let ErrorDomain = "N87kWebSocketErrorDomain"
 
 public enum Errors: Int {
-    case InvalidOpCode = 1, InvalidReservedBit, InvalidMask
+    case InvalidOpCode = 1, InvalidReservedBit, InvalidLength, InvalidMask
+}
+
+struct HTTPVersions {
+    static let HTTP1_1: NSString = "HTTP/1.1"
+}
+
+struct GUIDs {
+    static let WebSocket = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+}
+
+struct HTTPStatusCodes {
+    static let Upgrade = 101
+}
+
+struct HTTPHeaderFields {
+    static let Connection = "Connection"
+    static let Host = "Host"
+    static let SecWebSocketAccept = "Sec-WebSocket-Accept"
+    static let SecWebSocketKey = "Sec-WebSocket-Key"
+    static let SecWebSocketVersion = "Sec-WebSocket-Version"
+    static let SecWebSocketExtensions = "Sec-WebSocket-Extensions"
+    static let Upgrade = "Upgrade"
+}
+
+struct HTTPHeaderValues {
+    static let Upgrade = "upgrade"
+    static let Version = "13"
+    static let WebSocket = "websocket"
 }
 
 public enum Scheme: String {
     case WS = "ws"
     case WSS = "wss"
-
+    
     public var isSecure: Bool { return self == WSS }
     public var defaultPort: Int { return self == WS ? 80 : 443 }
 }

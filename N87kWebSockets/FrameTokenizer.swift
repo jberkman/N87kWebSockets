@@ -35,7 +35,7 @@ protocol FrameTokenizerDelegate: NSObjectProtocol {
 class FrameTokenizer: NSObject {
 
     private enum State {
-        case OpCode, Length
+        case OpCode, Length(isControl: Bool)
         case ExtendedLength(length: UInt64, shiftOffset: Int)
         case UnmaskedData(bytesRemaining: UInt64)
         case MaskingKey(bytesRemaining: UInt64, mask: [UInt8])
@@ -43,16 +43,42 @@ class FrameTokenizer: NSObject {
         case Error
     }
 
-    private var state = State.OpCode
+    private var state: State = State.OpCode {
+        didSet {
+            switch state {
+            case .OpCode:
+                delegate?.frameTokenizerDidEndFrame(self)
+            default:
+                break
+            }
+        }
+    }
 
     private let masked: Bool
     init(masked: Bool) {
-        assert(!masked, "Masked streams are not supported.")
         self.masked = masked
         super.init()
     }
 
     var delegate: FrameTokenizerDelegate?
+    
+    private func appendMaskedByte(byte: UInt8) {
+        switch state {
+        case .MaskedData(let bytesRemaining, var mask, let .Some(buffer)):
+            buffer.increaseLengthBy(1)
+            UnsafeMutablePointer<UInt8>(buffer.mutableBytes)[buffer.length - 1] = byte ^ mask.next()!
+            if bytesRemaining > 1 {
+                NSLog("%@", "bytes remaining: \(bytesRemaining - UInt64(1))")
+                state = .MaskedData(bytesRemaining: bytesRemaining - UInt64(1), mask: mask, buffer: buffer)
+            } else {
+                delegate?.frameTokenizer(self, didReadData: buffer)
+                state = .OpCode
+            }
+
+        default:
+            NSLog("Invalid state")
+        }
+    }
 
     func readData(data: NSData) -> NSError? {
         if data.length == 0 {
@@ -71,32 +97,36 @@ class FrameTokenizer: NSObject {
                         return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.rawValue, userInfo: nil)
                     }
                     delegate?.frameTokenizer(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
+                    state = .Length(isControl: opCode.isControl)
                 } else {
                     state = .Error
                     return NSError(domain: ErrorDomain, code: Errors.InvalidOpCode.rawValue, userInfo: nil)
                 }
-                state = .Length
 
-            case .Length:
+            case .Length(let isControl):
                 if (byte & HeaderMasks.Mask == HeaderMasks.Mask) != masked {
                     state = .Error
                     return NSError(domain: ErrorDomain, code: Errors.InvalidMask.rawValue, userInfo: nil)
                 }
                 switch (byte & HeaderMasks.PayloadLen, masked) {
-                case (ExtendedLength.Short, _):
+                case (ExtendedLength.Short, _) where !isControl.isControl:
                     state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt16) - sizeof(UInt8))
-                case (ExtendedLength.Long, _):
+                case (ExtendedLength.Long, _) where !isControl.isControl:
                     state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt64) - sizeof(UInt8))
                 case (let payloadLen, true):
+                    NSLog("got length: %@", "\(payloadLen)")
                     state = .MaskingKey(bytesRemaining: UInt64(payloadLen), mask: [UInt8]())
                 case (let payloadLen, false):
+                    NSLog("got length: %@", "\(payloadLen)")
                     state = .UnmaskedData(bytesRemaining: UInt64(payloadLen))
                 default:
-                    fatalError("Should not be reached.")
+                    state = .Error
+                    return NSError(domain: ErrorDomain, code: Errors.InvalidLength.rawValue, userInfo: nil)
                 }
 
             case .ExtendedLength(let length, shiftOffset: 0):
                 let bytesRemaining = length + UInt64(byte)
+                NSLog("got length: %@", "\(bytesRemaining)")
                 if masked {
                     state = .MaskingKey(bytesRemaining: bytesRemaining, mask: [UInt8]())
                 } else {
@@ -112,17 +142,17 @@ class FrameTokenizer: NSObject {
                 delegate?.frameTokenizer(self, didReadData: NSData(bytes: UnsafePointer<Void>(p), length: bytesRead))
                 p += bytesRead - 1 // take into account loop increment
                 if bytesRemaining == bytesRead64 {
-                    delegate?.frameTokenizerDidEndFrame(self)
                     state = .OpCode
                 } else {
                     state = .UnmaskedData(bytesRemaining: bytesRemaining - bytesRead64)
                 }
 
-            case .MaskingKey(let bytesRemaining, let mask):
-                let newMask = mask + [byte]
+            case .MaskingKey(let bytesRemaining, var mask):
+                mask += [byte]
                 if mask.count < 4 {
-                    state = .MaskingKey(bytesRemaining: bytesRemaining, mask: newMask)
+                    state = .MaskingKey(bytesRemaining: bytesRemaining, mask: mask)
                 } else {
+                    NSLog("got masking key: %@", "\(mask)")
                     state = .MaskedData(bytesRemaining: bytesRemaining, mask: GeneratorOf(RingGenerator(collection: mask)), buffer: nil)
                 }
 
@@ -130,30 +160,22 @@ class FrameTokenizer: NSObject {
                 let bytesRead64 = min(bytesRemaining, UInt64(p.distanceTo(finish)))
                 let bytesRead = Int(bytesRead64)
                 let buffer = NSMutableData(capacity: bytesRead)
-                buffer.length = 1
-                UnsafeMutablePointer<UInt8>(buffer.mutableBytes).memory = byte ^ mask.next()!
-                state = .MaskedData(bytesRemaining: bytesRemaining - UInt64(1), mask: mask, buffer: buffer)
+                state = .MaskedData(bytesRemaining: bytesRemaining, mask: mask, buffer: NSMutableData(capacity: bytesRead))
+                appendMaskedByte(byte)
 
-            case .MaskedData(let bytesRemaining, var mask, let .Some(buffer)):
-                buffer.increaseLengthBy(1)
-                UnsafeMutablePointer<UInt8>(buffer.mutableBytes)[buffer.length - 1] = byte ^ mask.next()!
-                state = .MaskedData(bytesRemaining: bytesRemaining - UInt64(1), mask: mask, buffer: buffer)
+            case .MaskedData:
+                appendMaskedByte(byte)
 
             default:
                 fatalError("Unexpected state while parsing.")
             }
         }
-
+        
         switch state {
-        case .MaskedData(0, _, .Some(data)):
-            delegate?.frameTokenizer(self, didReadData: data)
-            delegate?.frameTokenizerDidEndFrame(self)
-            state = .OpCode
-
-        case .MaskedData(let bytesRemaining, let mask, .Some(data)):
-            delegate?.frameTokenizer(self, didReadData: data)
+        case .MaskedData(let bytesRemaining, var mask, .Some(let buffer)):
+            NSLog("bytes remaining: %@", "\(bytesRemaining)")
+            delegate?.frameTokenizer(self, didReadData: buffer)
             state = .MaskedData(bytesRemaining: bytesRemaining, mask: mask, buffer: nil)
-            
         default:
             break
         }
