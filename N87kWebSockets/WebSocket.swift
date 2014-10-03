@@ -28,11 +28,14 @@ import Foundation
 
 @objc
 public protocol WebSocketDelegate: NSObjectProtocol {
+    optional func webSocket(webSocket: WebSocket, shouldAcceptConnectionWithRequest request: NSURLRequest) -> Bool
+
     func webSocketDidOpen(webSocket: WebSocket)
     func webSocketDidClose(webSocket: WebSocket)
     func webSocket(webSocket: WebSocket, didFailWithError error: NSError)
     
-    func webSocket(webSocket: WebSocket, willBeginDataWithBinary isBinary: Bool)
+    func webSocketWillBeginTextData(webSocket: WebSocket)
+    func webSocketWillBeginBinaryData(webSocket: WebSocket)
     func webSocket(webSocket: WebSocket, didReadData data: NSData)
     func webSocketDidFinishData(webSocket: WebSocket)
     
@@ -45,7 +48,7 @@ public class WebSocket: NSObject {
     private enum State {
         case ClientConnecting(ClientHandshake)
         case ServerConnecting(ServerHandshake)
-        case Open(tokenizer: FrameTokenizer, serializer: FrameSerializer, forwardData: Bool, isFinal: Bool)
+        case Open(tokenizer: FrameTokenizer, serializer: FrameSerializer, opCode: OpCode?, isFinal: Bool?)
         case Closing, Closed
     }
 
@@ -55,12 +58,18 @@ public class WebSocket: NSObject {
             switch (oldValue, state) {
             case (.ClientConnecting, .Open):
                 delegate?.webSocketDidOpen(self)
+            case (.Closing, _):
+                outputStream.close()
+            case (.Closed, _):
+                delegate?.webSocketDidClose(self)
             default:
                 break
             }
         }
     }
+
     private var runLoop: NSRunLoop?
+    private var runLoopMode = NSDefaultRunLoopMode
 
     private var _currentRequest: NSURLRequest? {
         didSet {
@@ -72,48 +81,99 @@ public class WebSocket: NSObject {
         }
     }
 
-    private var delegate: WebSocketDelegate?
+    public var delegate: WebSocketDelegate?
 
     public let originalRequest: NSURLRequest?
     public var currentRequest: NSURLRequest? { return _currentRequest }
 
     public let subprotocols: [String]
 
-    private var inputStream: DataInputStream!
-    private var outputStream: DataOutputStream!
+    private var inputStream: DataInputStream! {
+        didSet {
+            oldValue?.delegate = nil
+            inputStream?.delegate = self
+        }
+    }
+    
+    private var outputStream: DataOutputStream! {
+        didSet {
+            oldValue?.delegate = nil
+            outputStream?.delegate = self
+        }
+    }
 
-    public init(request: NSURLRequest, subprotocols: [String], delegate: WebSocketDelegate) {
+    // Client API
+    public init(request: NSURLRequest, subprotocols: [String] = []) {
         originalRequest = request
         _currentRequest = request
         if let scheme = request.URL.scheme {
             self.scheme = Scheme(rawValue: scheme)
         }
         self.subprotocols = subprotocols
-
         super.init()
-        self.delegate = delegate
-
-        connect()
     }
     
-    public init(scheme: Scheme, inputStream: NSInputStream, outputStream: NSOutputStream, runLoop: NSRunLoop, delegate: WebSocketDelegate) {
+    // Server API
+    public init(scheme: Scheme, subprotocols: [String] = []) {
         self.scheme = scheme
-        subprotocols = []
-        self.runLoop = runLoop
-        self.delegate = delegate
+        self.subprotocols = subprotocols
         super.init()
+    }
+    
+    deinit {
+        inputStream = nil
+        outputStream = nil
+    }
+    
+    public func scheduleInRunLoop(runLoop: NSRunLoop, forMode mode: String) {
+        self.runLoop = runLoop
+        self.runLoopMode = mode
+    }
+
+    public func connect() {
+        switch state {
+        case .Closed where currentRequest != nil:
+            if currentRequest!.URL.host == nil || scheme == nil || currentRequest!.HTTPMethod != "GET" {
+                let error = NSError(domain: NSCocoaErrorDomain, code: NSURLErrorBadURL, userInfo: nil)
+                NSTimer.scheduledTimerWithTimeInterval(0, target: self, selector: "delegateErrorTimerDidFire:", userInfo: error, repeats: false)
+                return
+            }
+            
+            let port = currentRequest!.URL.port?.integerValue ?? scheme!.defaultPort
+            var inputStream: NSInputStream?
+            var outputStream: NSOutputStream?
+            NSStream.getStreamsToHostWithName(currentRequest!.URL.host!, port: port, inputStream: &inputStream, outputStream: &outputStream)
+            if inputStream == nil || outputStream == nil {
+                NSLog("Could not open streams")
+                return
+            }
+            
+            connectWithInputStream(inputStream!, outputStream: outputStream!)
+            
+        default:
+            break
+        }
+    }
+    
+    public func connectWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
+        let handshake = ClientHandshake(request: currentRequest!)
+        let data: NSData! = handshake.requestData
+        if data == nil {
+            NSLog("Could not get handshake request data.")
+            return
+        }
+        
+        initializeInputStream(inputStream, outputStream: outputStream)
+        
+        state = .ClientConnecting(handshake)
+        self.outputStream.writeData(data)
+    }
+    
+    public func acceptConnectionWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
         initializeInputStream(inputStream, outputStream: outputStream)
         state = .ServerConnecting(ServerHandshake())
     }
-
-    public convenience init(request: NSURLRequest, subprotocol: String, delegate: WebSocketDelegate) {
-        self.init(request: request, subprotocols: [subprotocol], delegate: delegate)
-    }
-
-    public convenience init(request: NSURLRequest, delegate: WebSocketDelegate) {
-        self.init(request: request, subprotocols: [String](), delegate: delegate)
-    }
-
+    
     public func writeText(text: String) -> Bool {
         switch state {
         case .Open(_, let serializer, _, _):
@@ -125,8 +185,68 @@ public class WebSocket: NSObject {
                 }
             }
             return false
+
         default:
             fatalError("Can't write text unless open")
+        }
+    }
+
+    public func writeData(data: NSData) -> Bool {
+        switch state {
+        case .Open(_, let serializer, _, _):
+            if let header = serializer.beginFrameWithOpCode(.Binary, isFinal: true, length: UInt64(data.length)) {
+                outputStream.writeData(header)
+                outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
+                return true
+            }
+            return false
+        
+        default:
+            fatalError("Can't write data unless open")
+        }
+    }
+    
+    public func ping(data: NSData? = nil) -> Bool {
+        switch state {
+        case .Open(_, let serializer, _, _):
+            if let header = serializer.beginFrameWithOpCode(.Ping, isFinal: true, length: UInt64(data?.length ?? 0)) {
+                outputStream.writeData(header)
+                if data != nil {
+                    outputStream.writeData(data!)
+                }
+                return true
+            }
+            return false
+            
+        default:
+            fatalError("Can't ping unless open")
+        }
+    }
+
+    public func closeWithStatusCode(status: UInt16, message: String?) {
+        switch state {
+        case .Open(_, let serializer, _, _):
+            let data = NSMutableData(capacity: ExtendedLength.Short - 1)
+            var networkStatus = status.bigEndian
+            withUnsafePointer(&networkStatus) { (statusBytes) -> Void in
+                data.appendBytes(UnsafePointer<Void>(statusBytes), length: sizeof(UInt16))
+            }
+            if let message = message?.cStringUsingEncoding(NSUTF8StringEncoding) {
+                if message.count + sizeof(UInt16) < ExtendedLength.Short - 1 {
+                    message.withUnsafeBufferPointer { (message) -> Void in
+                        data.appendBytes(message.baseAddress, length: message.count)
+                    }
+                }
+            }
+
+            if let header = serializer.beginFrameWithOpCode(.ConnectionClose, isFinal: true, length: UInt64(data.length)) {
+                outputStream.writeData(header)
+                outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
+            }
+            state = .Closing
+            
+        default:
+            break
         }
     }
 }
@@ -137,58 +257,20 @@ extension WebSocket {
         delegate?.webSocket(self, didFailWithError: timer.userInfo as NSError)
     }
 
-    private func connect() {
-        switch state {
-        case .Closed where currentRequest != nil:
-            if currentRequest?.URL.host == nil || scheme == nil || currentRequest?.HTTPMethod != "GET" {
-                let error = NSError(domain: NSCocoaErrorDomain, code: NSURLErrorBadURL, userInfo: nil)
-                NSTimer.scheduledTimerWithTimeInterval(0, target: self, selector: "delegateErrorTimerDidFire:", userInfo: error, repeats: false)
-                return
-            }
-
-            let port = currentRequest!.URL.port?.integerValue ?? scheme!.defaultPort
-            var input: NSInputStream?
-            var output: NSOutputStream?
-            NSStream.getStreamsToHostWithName(currentRequest!.URL.host!, port: port, inputStream: &input, outputStream: &output)
-            if input == nil || output == nil {
-                NSLog("Could not open streams")
-                return
-            }
-
-            let handshake = ClientHandshake(request: currentRequest!)
-            let data: NSData! = handshake.requestData
-            if data == nil {
-                NSLog("Could not get handshake request data.")
-                return
-            }
-            
-            initializeInputStream(input!, outputStream: output!)
-            
-            state = .ClientConnecting(handshake)
-            outputStream.writeData(data)
-            
-        default:
-            break
-        }
-    }
-    
-    func initializeInputStream(input: NSInputStream, outputStream output: NSOutputStream) {
+    func initializeInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
         let securityLevel = scheme!.isSecure ? NSStreamSocketSecurityLevelTLSv1 : NSStreamSocketSecurityLevelNone
-        input.setProperty(securityLevel, forKey: NSStreamSocketSecurityLevelKey)
-        output.setProperty(securityLevel, forKey: NSStreamSocketSecurityLevelKey)
+        inputStream.setProperty(securityLevel, forKey: NSStreamSocketSecurityLevelKey)
+        outputStream.setProperty(securityLevel, forKey: NSStreamSocketSecurityLevelKey)
 
         let runLoop = self.runLoop ?? NSRunLoop.currentRunLoop()
-        input.scheduleInRunLoop(runLoop, forMode: NSDefaultRunLoopMode)
-        output.scheduleInRunLoop(runLoop, forMode: NSDefaultRunLoopMode)
+        inputStream.scheduleInRunLoop(runLoop, forMode: runLoopMode)
+        outputStream.scheduleInRunLoop(runLoop, forMode: runLoopMode)
 
-        inputStream = DataInputStream(inputStream: input)
-        outputStream = DataOutputStream(outputStream: output)
+        self.inputStream = DataInputStream(inputStream: inputStream)
+        self.outputStream = DataOutputStream(outputStream: outputStream)
 
-        inputStream.delegate = self
-        outputStream.delegate = self
-
-        input.open()
-        output.open()
+        inputStream.open()
+        outputStream.open()
     }
 
     private func handleClientHandshake(result: ClientHandshake.Result) {
@@ -203,7 +285,7 @@ extension WebSocket {
         case .Response(let response, let data):
             let tokenizer = FrameTokenizer(masked: false)
             tokenizer.delegate = self
-            state = .Open(tokenizer: tokenizer, serializer: FrameSerializer(masked: true), forwardData: false, isFinal: false)
+            state = .Open(tokenizer: tokenizer, serializer: FrameSerializer(masked: true), opCode: nil, isFinal: nil)
             if data != nil {
                 handleTokenizerError(tokenizer.readData(data!))
             }
@@ -220,23 +302,30 @@ extension WebSocket {
             NSLog("Invalid handshake.")
             
         case .Request(let request, let data):
-            // FIXME: Validate request
-            let responseData = handshake.responseData
-            if responseData != nil {
-                outputStream.writeData(responseData!)
-                let tokenizer = FrameTokenizer(masked: true)
-                tokenizer.delegate = self
-                state = .Open(tokenizer: tokenizer, serializer: FrameSerializer(masked: false), forwardData: false, isFinal: false)
-                if data != nil {
-                    handleTokenizerError(tokenizer.readData(data!))
+            if delegate?.webSocket?(self, shouldAcceptConnectionWithRequest: request) ?? true {
+                if let responseData = handshake.responseData {
+                    outputStream.writeData(responseData)
+                    let tokenizer = FrameTokenizer(masked: true)
+                    tokenizer.delegate = self
+                    state = .Open(tokenizer: tokenizer, serializer: FrameSerializer(masked: false), opCode: nil, isFinal: nil)
+                    if data != nil {
+                        handleTokenizerError(tokenizer.readData(data!))
+                    }
                 }
+            }
+            switch state {
+            case .ServerConnecting:
+                state = .Closing
+            default:
+                break
             }
         }
     }
 
     private func handleTokenizerError(error: NSError?) {
         if error != nil {
-            NSLog("Invalid data: %@", error!)
+            delegate?.webSocket(self, didFailWithError: error!)
+            state = .Closing
         }
     }
 
@@ -249,7 +338,6 @@ extension WebSocket: DataInputStreamDelegate {
         case .ClientConnecting(let handshake):
             handleClientHandshake(handshake.readData(data))
         case .ServerConnecting(let handshake):
-            NSLog("%@", "read \(data.length)")
             handleServerHandshake(handshake, result: handshake.readData(data))
         case .Open(let tokenizer, _, _, _):
             handleTokenizerError(tokenizer.readData(data))
@@ -260,10 +348,19 @@ extension WebSocket: DataInputStreamDelegate {
 
     func dataInputStream(dataInputStream: DataInputStream, didCloseWithError error: NSError) {
         NSLog("%@ %@", __FUNCTION__, error)
+        inputStream = nil
+        switch state {
+        case .Closing, .Closed:
+            break
+        default:
+            delegate?.webSocket(self, didFailWithError: error)
+            state = .Closing
+        }
     }
 
     func dataInputStreamDidReadToEnd(dataInputStream: DataInputStream) {
         NSLog("%@", __FUNCTION__)
+        inputStream = nil
     }
 
 }
@@ -272,8 +369,20 @@ extension WebSocket: DataOutputStreamDelegate {
 
     func dataOutputStream(dataOutputStream: DataOutputStream, didCloseWithError error: NSError) {
         NSLog("%@ %@", __FUNCTION__, error)
+        outputStream = nil
+        switch state {
+        case .Closing, .Closed:
+            break
+        default:
+            delegate?.webSocket(self, didFailWithError: error)
+            state = .Closing
+        }
     }
 
+    func dataOutputStreamDidClose(dataOutputStream: DataOutputStream) {
+        NSLog("%@", __FUNCTION__)
+        state = .Closed
+    }
 }
 
 extension WebSocket: FrameTokenizerDelegate {
@@ -282,48 +391,69 @@ extension WebSocket: FrameTokenizerDelegate {
         NSLog("Got frame with opCode: %@", "\(opCode.rawValue)")
         var isBinary = false
         switch state {
-        case .Open(let tokenizer, let serializer, let forwardData, _):
+        case .Open(let tokenizer, let serializer, _, _):
             switch opCode {
-            case .Binary where !forwardData:
-                isBinary = true
-                fallthrough
-            case .Text where !forwardData:
-                delegate?.webSocket(self, willBeginDataWithBinary: isBinary)
-                state = .Open(tokenizer: tokenizer, serializer: serializer, forwardData: true, isFinal: isFinal)
-            case .Continuation where forwardData:
+            case .Binary:
+                delegate?.webSocketWillBeginBinaryData(self)
+            case .Text:
+                delegate?.webSocketWillBeginTextData(self)
+            case .Continuation:
                 break
             case .Ping where isFinal:
                 delegate?.webSocketDidPing?(self)
-                if let data = serializer.beginFrameWithOpCode(.Pong, isFinal: true, length: 0) {
-                    outputStream.writeData(data)
-                }
             case .Pong where isFinal:
                 delegate?.webSocketDidPong?(self)
             default:
                 NSLog("Invalid opCode for state.");
             }
-
+            state = .Open(tokenizer: tokenizer, serializer: serializer, opCode: opCode, isFinal: isFinal)
         default:
             NSLog("Invalid state for opCode")
+        }
+    }
+
+    func frameTokenizer(frameTokenizer: FrameTokenizer, didReadFrameLength frameLength: UInt64) {
+        NSLog("%@ %@", __FUNCTION__, "\(frameLength)")
+        switch state {
+        case .Open(_, let serializer, .Some(.Ping), _):
+            if let data = serializer.beginFrameWithOpCode(.Pong, isFinal: true, length: frameLength) {
+                outputStream.writeData(data)
+            } else {
+                state = .Closing
+            }
+        default:
+            break
         }
     }
 
     func frameTokenizer(frameTokenizer: FrameTokenizer, didReadData data: NSData) {
         NSLog("%@ %@", __FUNCTION__, data)
         switch state {
-        case .Open(_, _, true, _):
-            delegate?.webSocket(self, didReadData: data)
+        case .Open(_, _, .Some(let opCode), _):
+            switch opCode {
+            case .Text, .Binary, .Continuation:
+                delegate?.webSocket(self, didReadData: data)
+            case .Ping:
+                outputStream.writeData(data)
+            default:
+                break
+            }
         default:
             break
         }
     }
 
     func frameTokenizerDidEndFrame(frameTokenizer: FrameTokenizer) {
-        NSLog("Ended frame.")
+        NSLog("%@", __FUNCTION__)
         switch state {
-        case .Open(let tokenizer, let serializer, true, true):
-            delegate?.webSocketDidFinishData(self)
-            state = .Open(tokenizer: tokenizer, serializer: serializer, forwardData: false, isFinal: false)
+        case .Open(let tokenizer, let serializer, .Some(let opCode), .Some(let isFinal)):
+            switch opCode {
+            case .Binary, .Text, .Continuation where isFinal == true:
+                delegate?.webSocketDidFinishData(self)
+            default:
+                break
+            }
+            state = .Open(tokenizer: tokenizer, serializer: serializer, opCode: nil, isFinal: nil)
         default:
             break
         }

@@ -28,6 +28,7 @@ import Foundation
 
 protocol DataOutputStreamDelegate: NSObjectProtocol {
     func dataOutputStream(dataOutputStream: DataOutputStream, didCloseWithError error: NSError)
+    func dataOutputStreamDidClose(dataOutputStream: DataOutputStream)
 }
 
 class DataOutputStream: NSObject {
@@ -37,6 +38,7 @@ class DataOutputStream: NSObject {
     private let outputStream: NSOutputStream
     private var queue = [NSData]()
     private var offset = 0
+    private var isClosing = false
 
     init(outputStream: NSOutputStream) {
         self.outputStream = outputStream
@@ -44,10 +46,22 @@ class DataOutputStream: NSObject {
         outputStream.delegate = self
     }
 
+    deinit {
+        outputStream.delegate = nil
+    }
+
     func writeData(data: NSData) {
         queue.append(data)
         if queue.count == 1 && outputStream.hasSpaceAvailable {
             writeData()
+        }
+    }
+    
+    func close() {
+        isClosing = true
+        if queue.isEmpty {
+            outputStream.close()
+            delegate?.dataOutputStreamDidClose(self)
         }
     }
 }
@@ -72,6 +86,9 @@ extension DataOutputStream {
                 NSLog("Error writing bytes: %@", outputStream.streamError!)
                 delegate?.dataOutputStream(self, didCloseWithError: outputStream.streamError!)
             }
+        } else if isClosing {
+            outputStream.close()
+            delegate?.dataOutputStreamDidClose(self)
         } else {
             NSLog("No data to write...")
         }

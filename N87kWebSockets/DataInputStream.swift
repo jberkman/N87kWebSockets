@@ -44,6 +44,10 @@ class DataInputStream: NSObject {
         self.inputStream.delegate = self
     }
 
+    deinit {
+        inputStream.delegate = nil
+    }
+    
 }
 
 extension DataInputStream {

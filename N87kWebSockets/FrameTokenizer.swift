@@ -28,6 +28,7 @@ import Foundation
 
 protocol FrameTokenizerDelegate: NSObjectProtocol {
     func frameTokenizer(frameTokenizer: FrameTokenizer, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit))
+    func frameTokenizer(FrameTokenizer: FrameTokenizer, didReadFrameLength frameLength: UInt64)
     func frameTokenizer(frameTokenizer: FrameTokenizer, didReadData data: NSData)
     func frameTokenizerDidEndFrame(frameTokenizer: FrameTokenizer)
 }
@@ -48,6 +49,23 @@ class FrameTokenizer: NSObject {
             switch state {
             case .OpCode:
                 delegate?.frameTokenizerDidEndFrame(self)
+
+            case .UnmaskedData(let bytesRemaining):
+                switch oldValue {
+                case .Length, .ExtendedLength:
+                    delegate?.frameTokenizer(self, didReadFrameLength: bytesRemaining)
+                default:
+                    break
+                }
+                
+            case .MaskingKey(let bytesRemaining, _):
+                switch oldValue {
+                case .Length, .ExtendedLength:
+                    delegate?.frameTokenizer(self, didReadFrameLength: bytesRemaining)
+                default:
+                    break
+                }
+                
             default:
                 break
             }
@@ -68,7 +86,6 @@ class FrameTokenizer: NSObject {
             buffer.increaseLengthBy(1)
             UnsafeMutablePointer<UInt8>(buffer.mutableBytes)[buffer.length - 1] = byte ^ mask.next()!
             if bytesRemaining > 1 {
-                NSLog("%@", "bytes remaining: \(bytesRemaining - UInt64(1))")
                 state = .MaskedData(bytesRemaining: bytesRemaining - UInt64(1), mask: mask, buffer: buffer)
             } else {
                 delegate?.frameTokenizer(self, didReadData: buffer)
