@@ -58,8 +58,10 @@ public class WebSocket: NSObject {
             switch (oldValue, state) {
             case (.ClientConnecting, .Open):
                 delegate?.webSocketDidOpen(self)
-            case (.Closing, _):
+            case (.Closing, _) where outputStream != nil:
                 outputStream.close()
+            case (.Closing, _) where outputStream == nil:
+                state = .Closed
             case (.Closed, _):
                 delegate?.webSocketDidClose(self)
             default:
@@ -175,14 +177,19 @@ public class WebSocket: NSObject {
     }
     
     public func writeText(text: String) -> Bool {
+        if let data = text.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false) {
+            return writeEncodedText(data)
+        }
+        return false
+    }
+    
+    public func writeEncodedText(encodedText: NSData) -> Bool {
         switch state {
         case .Open(_, let serializer, _, _):
-            if let data = text.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false) {
-                if let header = serializer.beginFrameWithOpCode(.Text, isFinal: true, length: UInt64(data.length)) {
-                    outputStream.writeData(header)
-                    outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
-                    return true
-                }
+            if let header = serializer.beginFrameWithOpCode(.Text, isFinal: true, length: UInt64(encodedText.length)) {
+                outputStream.writeData(header)
+                outputStream.writeData(originalRequest == nil ? encodedText : serializer.maskedData(encodedText))
+                return true
             }
             return false
 
