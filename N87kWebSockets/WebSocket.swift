@@ -58,11 +58,11 @@ public class WebSocket: NSObject {
             switch (oldValue, state) {
             case (.ClientConnecting, .Open):
                 delegate?.webSocketDidOpen(self)
-            case (.Closing, _) where outputStream != nil:
+            case (_, .Closing) where outputStream != nil:
                 outputStream.close()
-            case (.Closing, _) where outputStream == nil:
+            case (_, .Closing) where outputStream == nil:
                 state = .Closed
-            case (.Closed, _):
+            case (_, .Closed):
                 delegate?.webSocketDidClose(self)
             default:
                 break
