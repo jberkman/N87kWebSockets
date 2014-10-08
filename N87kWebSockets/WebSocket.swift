@@ -158,17 +158,16 @@ public class WebSocket: NSObject {
     }
     
     public func connectWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
-        let handshake = ClientHandshake(request: currentRequest!)
-        let data: NSData! = handshake.requestData
-        if data == nil {
-            NSLog("Could not get handshake request data.")
-            return
+        if let handshake = ClientHandshake(request: currentRequest!) {
+            if let data = handshake.requestData {
+                initializeInputStream(inputStream, outputStream: outputStream)
+                
+                state = .ClientConnecting(handshake)
+                self.outputStream.writeData(data)
+                return
+            }
         }
-        
-        initializeInputStream(inputStream, outputStream: outputStream)
-        
-        state = .ClientConnecting(handshake)
-        self.outputStream.writeData(data)
+        NSLog("Could not get handshake request data.")
     }
     
     public func acceptConnectionWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {

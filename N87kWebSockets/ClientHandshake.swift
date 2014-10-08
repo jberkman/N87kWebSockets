@@ -50,9 +50,14 @@ class ClientHandshake: NSObject {
         return "\(key!)\(GUIDs.WebSocket)".N87k_SHA1Digest
     }
 
-    init(request: NSURLRequest) {
+    init?(request: NSURLRequest) {
         self.request = request
         super.init()
+        if request.URL.host == nil ||
+            "GET" != request.HTTPMethod ||
+            scheme == nil {
+                return nil
+        }
     }
 
     private var scheme: Scheme? {
