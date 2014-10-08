@@ -12,7 +12,6 @@
 		162E6FA219D10C4B00E384D1 /* NSString+N87kWebSockets.m in Sources */ = {isa = PBXBuildFile; fileRef = 162E6FA019D10C4B00E384D1 /* NSString+N87kWebSockets.m */; };
 		162E6FA319D10C4B00E384D1 /* NSString+N87kWebSockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 162E6FA119D10C4B00E384D1 /* NSString+N87kWebSockets.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16AE116C19CE1DD3003E9B4B /* N87kWebSockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 16AE116B19CE1DD3003E9B4B /* N87kWebSockets.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		16AE117619CE1DD3003E9B4B /* N87kWebSocketsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AE117519CE1DD3003E9B4B /* N87kWebSocketsTests.swift */; };
 		16AE118219CE2438003E9B4B /* WebSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AE118119CE2438003E9B4B /* WebSocket.swift */; };
 		16B2D99819D5419500887D73 /* RingGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B2D99719D5419500887D73 /* RingGenerator.swift */; };
 		16B2D9A019D58E2600887D73 /* ClientHandshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CFFB7719D14C93006650C9 /* ClientHandshake.swift */; };
@@ -20,6 +19,17 @@
 		16CFFB7919D28EC6006650C9 /* FrameTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CFFB7519D118A8006650C9 /* FrameTokenizer.swift */; };
 		16E8E86419CF8534005DAB67 /* DataOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86319CF8534005DAB67 /* DataOutputStream.swift */; };
 		16E8E86619CF8CA9005DAB67 /* DataInputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */; };
+		16F533A819E4788000CCF79C /* ClientHandshakeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F533A719E4788000CCF79C /* ClientHandshakeTests.swift */; };
+		16F533A919E47C0500CCF79C /* ClientHandshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CFFB7719D14C93006650C9 /* ClientHandshake.swift */; };
+		16F533AA19E47C6A00CCF79C /* WebSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AE118119CE2438003E9B4B /* WebSocket.swift */; };
+		16F533AB19E47C8000CCF79C /* DataInputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */; };
+		16F533AC19E47C8000CCF79C /* DataOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86319CF8534005DAB67 /* DataOutputStream.swift */; };
+		16F533AD19E47C8000CCF79C /* FrameSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C637119D31EBB000E56FC /* FrameSerializer.swift */; };
+		16F533AE19E47C8000CCF79C /* FrameTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CFFB7519D118A8006650C9 /* FrameTokenizer.swift */; };
+		16F533AF19E47C8000CCF79C /* RingGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B2D99719D5419500887D73 /* RingGenerator.swift */; };
+		16F533B019E47C8000CCF79C /* ServerHandshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B2D99919D555E900887D73 /* ServerHandshake.swift */; };
+		16F533B119E47CA500CCF79C /* NSString+N87kWebSockets.m in Sources */ = {isa = PBXBuildFile; fileRef = 162E6FA019D10C4B00E384D1 /* NSString+N87kWebSockets.m */; };
+		16F533B319E5203100CCF79C /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C636F19D31C3B000E56FC /* WebSockets.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,7 +42,6 @@
 		16AE116B19CE1DD3003E9B4B /* N87kWebSockets.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = N87kWebSockets.h; sourceTree = "<group>"; };
 		16AE117119CE1DD3003E9B4B /* N87kWebSocketsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = N87kWebSocketsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		16AE117419CE1DD3003E9B4B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		16AE117519CE1DD3003E9B4B /* N87kWebSocketsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = N87kWebSocketsTests.swift; sourceTree = "<group>"; };
 		16AE118119CE2438003E9B4B /* WebSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
 		16B2D99719D5419500887D73 /* RingGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RingGenerator.swift; sourceTree = "<group>"; };
 		16B2D99919D555E900887D73 /* ServerHandshake.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerHandshake.swift; sourceTree = "<group>"; };
@@ -40,6 +49,8 @@
 		16CFFB7719D14C93006650C9 /* ClientHandshake.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientHandshake.swift; sourceTree = "<group>"; };
 		16E8E86319CF8534005DAB67 /* DataOutputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataOutputStream.swift; sourceTree = "<group>"; };
 		16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataInputStream.swift; sourceTree = "<group>"; };
+		16F533A719E4788000CCF79C /* ClientHandshakeTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientHandshakeTests.swift; sourceTree = "<group>"; };
+		16F533B219E47CCA00CCF79C /* N87kWebSocketsTests-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "N87kWebSocketsTests-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,7 +120,8 @@
 		16AE117219CE1DD3003E9B4B /* N87kWebSocketsTests */ = {
 			isa = PBXGroup;
 			children = (
-				16AE117519CE1DD3003E9B4B /* N87kWebSocketsTests.swift */,
+				16F533B219E47CCA00CCF79C /* N87kWebSocketsTests-Bridging-Header.h */,
+				16F533A719E4788000CCF79C /* ClientHandshakeTests.swift */,
 				16AE117319CE1DD3003E9B4B /* Supporting Files */,
 			);
 			path = N87kWebSocketsTests;
@@ -248,7 +260,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16AE117619CE1DD3003E9B4B /* N87kWebSocketsTests.swift in Sources */,
+				16F533A919E47C0500CCF79C /* ClientHandshake.swift in Sources */,
+				16F533B319E5203100CCF79C /* WebSockets.swift in Sources */,
+				16F533B119E47CA500CCF79C /* NSString+N87kWebSockets.m in Sources */,
+				16F533AB19E47C8000CCF79C /* DataInputStream.swift in Sources */,
+				16F533B019E47C8000CCF79C /* ServerHandshake.swift in Sources */,
+				16F533AC19E47C8000CCF79C /* DataOutputStream.swift in Sources */,
+				16F533AF19E47C8000CCF79C /* RingGenerator.swift in Sources */,
+				16F533AA19E47C6A00CCF79C /* WebSocket.swift in Sources */,
+				16F533A819E4788000CCF79C /* ClientHandshakeTests.swift in Sources */,
+				16F533AE19E47C8000CCF79C /* FrameTokenizer.swift in Sources */,
+				16F533AD19E47C8000CCF79C /* FrameSerializer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,6 +414,7 @@
 				INFOPLIST_FILE = N87kWebSocketsTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "N87kWebSocketsTests/N87kWebSocketsTests-Bridging-Header.h";
 			};
 			name = Debug;
 		};
@@ -405,6 +428,7 @@
 				INFOPLIST_FILE = N87kWebSocketsTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "N87kWebSocketsTests/N87kWebSocketsTests-Bridging-Header.h";
 			};
 			name = Release;
 		};
