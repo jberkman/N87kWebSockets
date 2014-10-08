@@ -68,8 +68,8 @@ class ServerHandshake: NSObject {
         if HTTPVersions.HTTP1_1 != CFHTTPMessageCopyVersion(requestMessage)?.takeRetainedValue() ||
             "GET" as NSString != CFHTTPMessageCopyRequestMethod(requestMessage)?.takeRetainedValue() {
         } else if let headerFields: NSDictionary = CFHTTPMessageCopyAllHeaderFields(requestMessage)?.takeRetainedValue() {
-            if headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade ||
-                headerFields[HTTPHeaderFields.Upgrade]?.lowercaseString != HTTPHeaderValues.WebSocket ||
+            if headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade.lowercaseString ||
+                headerFields[HTTPHeaderFields.Upgrade]?.lowercaseString != HTTPHeaderValues.WebSocket.lowercaseString ||
                 headerFields[HTTPHeaderFields.SecWebSocketVersion]?.lowercaseString != HTTPHeaderValues.Version ||
                 headerFields[HTTPHeaderFields.SecWebSocketKey] == nil ||
                 headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {

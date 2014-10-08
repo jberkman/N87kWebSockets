@@ -106,8 +106,8 @@ class ClientHandshake: NSObject {
             let statusCode = CFHTTPMessageGetResponseStatusCode(responseMessage)
             if let headerFields: NSDictionary = CFHTTPMessageCopyAllHeaderFields(responseMessage)?.takeRetainedValue() {
                 if HTTPVersion != HTTPVersions.HTTP1_1 || statusCode != HTTPStatusCodes.Upgrade ||
-                    headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade ||
-                    headerFields[HTTPHeaderFields.Upgrade]?.lowercaseString != HTTPHeaderValues.WebSocket ||
+                    headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade.lowercaseString ||
+                    headerFields[HTTPHeaderFields.Upgrade]?.lowercaseString != HTTPHeaderValues.WebSocket.lowercaseString ||
                     headerFields[HTTPHeaderFields.SecWebSocketVersion]?.lowercaseString != HTTPHeaderValues.Version ||
                     headerFields[HTTPHeaderFields.SecWebSocketAccept] as? NSString != expectedAccept ||
                     headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {
