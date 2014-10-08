@@ -25,6 +25,7 @@
 //
 
 import XCTest
+import CFNetwork
 
 class ClientHandshakeTests: XCTestCase {
 
@@ -49,5 +50,75 @@ class ClientHandshakeTests: XCTestCase {
         let request = NSMutableURLRequest(URL: URL)
         request.HTTPMethod = "POST"
         XCTAssertNil(ClientHandshake(request: request))
+    }
+    
+    func testInvalidScheme() {
+        let URL = NSURL(scheme: "http", host: "host", path: "/path")!
+        let request = NSURLRequest(URL: URL)
+        XCTAssertNil(ClientHandshake(request: request))
+    }
+    
+    func testValidURL() {
+        let URL = NSURL(scheme: Scheme.WS.rawValue, host: "host", path: "/path")!
+        let request = NSURLRequest(URL: URL)
+        let handshake = ClientHandshake(request: request)
+        XCTAssertNotNil(handshake)
+    }
+    
+    func testRequest() {
+        let URL = NSURL(scheme: Scheme.WS.rawValue, host: "host", path: "/path")!
+        let request = NSURLRequest(URL: URL)
+        let handshake = ClientHandshake(request: request)
+        XCTAssertNotNil(handshake)
+
+        let data = handshake?.requestData
+        XCTAssertNotNil(data)
+        
+        if let data = data {
+            NSLog("%@", NSString(data: data, encoding: NSUTF8StringEncoding)!)
+            let request = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(1)).takeRetainedValue()
+            CFHTTPMessageAppendBytes(request, UnsafePointer<UInt8>(data.bytes), data.length)
+            XCTAssertEqual(CFHTTPMessageIsHeaderComplete(request), Boolean(1))
+            
+            let method = CFHTTPMessageCopyRequestMethod(request).takeRetainedValue() as NSString
+            XCTAssertEqual(method, "GET")
+            
+            let requestURL = CFHTTPMessageCopyRequestURL(request).takeRetainedValue() as NSURL
+            XCTAssertEqual(requestURL.absoluteString!, "http://host/path")
+            
+            let headers = CFHTTPMessageCopyAllHeaderFields(request).takeRetainedValue() as NSDictionary
+            func assertHeader(key: String, value: NSString) {
+                let header = headers[key] as? NSString
+                XCTAssertNotNil(header, "nil \(key) header")
+                if let header = header {
+                    XCTAssertEqual(header, value, "incorrect value for \(key) header")
+                }
+            }
+            
+            assertHeader("Host", "host")
+            assertHeader("Connection", "Upgrade")
+            assertHeader("Upgrade", "websocket")
+            assertHeader("Sec-WebSocket-Version", "13")
+
+            let key = headers["Sec-WebSocket-Key"] as? NSString
+            XCTAssertNotNil(key)
+        }
+    }
+
+    func testIncompleteResponse() {
+        let URL = NSURL(scheme: Scheme.WS.rawValue, host: "host", path: "/path")!
+        let request = NSURLRequest(URL: URL)
+        let handshake = ClientHandshake(request: request)
+
+        let response = CFHTTPMessageCreateResponse(kCFAllocatorDefault, 101, "Connection upgrade", "HTTP/1.1").takeRetainedValue()
+        let data = CFHTTPMessageCopySerializedMessage(response).takeRetainedValue() as NSData
+
+        let status = handshake?.readData(NSData(bytes: UnsafePointer<UInt8>(data.bytes), length: data.length / 2))
+        switch status {
+        case .Some(.Incomplete):
+            break
+        default:
+            XCTFail("Invalid handshake status: \(status)")
+        }
     }
 }

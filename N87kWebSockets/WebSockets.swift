@@ -102,7 +102,7 @@ struct HTTPHeaderFields {
 }
 
 struct HTTPHeaderValues {
-    static let Upgrade = "upgrade"
+    static let Upgrade = "Upgrade"
     static let Version = "13"
     static let WebSocket = "websocket"
 }

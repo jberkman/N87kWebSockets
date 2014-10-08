@@ -19,8 +19,8 @@
 		16F533DE19E52B0E00CCF79C /* FrameSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F533CE19E52B0E00CCF79C /* FrameSerializer.swift */; };
 		16F533DF19E52B0E00CCF79C /* FrameTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F533CF19E52B0E00CCF79C /* FrameTokenizer.swift */; };
 		16F533E019E52B0E00CCF79C /* FrameTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F533CF19E52B0E00CCF79C /* FrameTokenizer.swift */; };
-		16F533E119E52B0E00CCF79C /* N87kWebSockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 16F533D019E52B0E00CCF79C /* N87kWebSockets.h */; };
-		16F533E219E52B0E00CCF79C /* NSString+N87kWebSockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 16F533D119E52B0E00CCF79C /* NSString+N87kWebSockets.h */; };
+		16F533E119E52B0E00CCF79C /* N87kWebSockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 16F533D019E52B0E00CCF79C /* N87kWebSockets.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		16F533E219E52B0E00CCF79C /* NSString+N87kWebSockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 16F533D119E52B0E00CCF79C /* NSString+N87kWebSockets.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16F533E319E52B0E00CCF79C /* NSString+N87kWebSockets.m in Sources */ = {isa = PBXBuildFile; fileRef = 16F533D219E52B0E00CCF79C /* NSString+N87kWebSockets.m */; };
 		16F533E419E52B0E00CCF79C /* NSString+N87kWebSockets.m in Sources */ = {isa = PBXBuildFile; fileRef = 16F533D219E52B0E00CCF79C /* NSString+N87kWebSockets.m */; };
 		16F533E519E52B0E00CCF79C /* RingGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F533D319E52B0E00CCF79C /* RingGenerator.swift */; };
