@@ -50,5 +50,4 @@ class ClientHandshakeTests: XCTestCase {
         request.HTTPMethod = "POST"
         XCTAssertNil(ClientHandshake(request: request))
     }
-
 }
