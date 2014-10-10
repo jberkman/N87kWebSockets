@@ -105,7 +105,7 @@ extension DataOutputStream: NSStreamDelegate {
         }
         if streamEvent & .ErrorOccurred == .ErrorOccurred {
             NSLog("ErrorOccurred: %@", stream.streamError!)
-            delegate?.dataOutputStream(self, didCloseWithError: stream.streamError!)
+            //delegate?.dataOutputStream(self, didCloseWithError: stream.streamError!)
         }
     }
 

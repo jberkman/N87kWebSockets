@@ -76,7 +76,7 @@ extension DataInputStream: NSStreamDelegate {
         }
         if streamEvent & .ErrorOccurred == .ErrorOccurred {
             NSLog("ErrorOccurred: %@", stream.streamError!)
-            delegate?.dataInputStream(self, didCloseWithError: stream.streamError!)
+            //delegate?.dataInputStream(self, didCloseWithError: stream.streamError!)
         }
         if streamEvent & .EndEncountered == .EndEncountered {
             delegate?.dataInputStreamDidReadToEnd(self)

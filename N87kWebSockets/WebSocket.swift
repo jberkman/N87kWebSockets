@@ -190,11 +190,11 @@ public class WebSocket: NSObject {
                 outputStream.writeData(originalRequest == nil ? encodedText : serializer.maskedData(encodedText))
                 return true
             }
-            return false
 
         default:
-            fatalError("Can't write text unless open")
+            NSLog("%@: Can't write text unless open", __FUNCTION__)
         }
+        return false
     }
 
     public func writeData(data: NSData) -> Bool {
@@ -205,11 +205,11 @@ public class WebSocket: NSObject {
                 outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
                 return true
             }
-            return false
-        
+
         default:
-            fatalError("Can't write data unless open")
+            NSLog("%@: Can't write binary data unless open", __FUNCTION__)
         }
+        return false
     }
     
     public func ping(data: NSData? = nil) -> Bool {
@@ -222,11 +222,11 @@ public class WebSocket: NSObject {
                 }
                 return true
             }
-            return false
-            
+
         default:
-            fatalError("Can't ping unless open")
+            NSLog("%@: Can't pint unless open", __FUNCTION__)
         }
+        return false
     }
 
     public func closeWithStatusCode(status: UInt16, message: String?) {
@@ -275,8 +275,8 @@ extension WebSocket {
         self.inputStream = DataInputStream(inputStream: inputStream)
         self.outputStream = DataOutputStream(outputStream: outputStream)
 
-        inputStream.open()
         outputStream.open()
+        inputStream.open()
     }
 
     private func handleClientHandshake(result: ClientHandshake.Result) {
@@ -287,6 +287,7 @@ extension WebSocket {
         case .Invalid:
             // FIXME: Notify delegate of error
             NSLog("Invalid handshake.")
+            state = .Closing
 
         case .Response(let response, let data):
             let tokenizer = FrameTokenizer(masked: false)
@@ -306,7 +307,8 @@ extension WebSocket {
         case .Invalid:
             // FIXME: Notify delegate of error
             NSLog("Invalid handshake.")
-            
+            state = .Closing
+
         case .Request(let request, let data):
             if delegate?.webSocket?(self, shouldAcceptConnectionWithRequest: request) ?? true {
                 if let responseData = handshake.responseData {
@@ -366,7 +368,7 @@ extension WebSocket: DataInputStreamDelegate {
 
     func dataInputStreamDidReadToEnd(dataInputStream: DataInputStream) {
         NSLog("%@", __FUNCTION__)
-        inputStream = nil
+        state = .Closing
     }
 
 }

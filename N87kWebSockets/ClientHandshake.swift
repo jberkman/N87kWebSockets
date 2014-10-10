@@ -108,14 +108,20 @@ class ClientHandshake: NSObject {
                 if HTTPVersion != HTTPVersions.HTTP1_1 || statusCode != HTTPStatusCodes.Upgrade ||
                     headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade.lowercaseString ||
                     headerFields[HTTPHeaderFields.Upgrade]?.lowercaseString != HTTPHeaderValues.WebSocket.lowercaseString ||
-                    headerFields[HTTPHeaderFields.SecWebSocketVersion]?.lowercaseString != HTTPHeaderValues.Version ||
                     headerFields[HTTPHeaderFields.SecWebSocketAccept] as? NSString != expectedAccept ||
                     headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {
+                        NSLog("%@ Invalid HTTP version %@, status code: %@, or header fields: %@", __FUNCTION__, HTTPVersion, "\(statusCode)", headerFields)
                 } else if let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields) {
                     let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue() as? AnyObject as? NSData
                     return .Response(response, responseData)
+                } else {
+                    NSLog("%@ Could not create response", __FUNCTION__)
                 }
+            } else {
+                NSLog("%@ No header fields", __FUNCTION__)
             }
+        } else {
+            NSLog("%@ No HTTP Version", __FUNCTION__)
         }
         return .Invalid
     }
