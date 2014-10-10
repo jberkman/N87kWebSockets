@@ -131,10 +131,10 @@ class FrameTokenizer: NSObject {
                 case (ExtendedLength.Long, _) where !isControl.isControl:
                     state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt64) - sizeof(UInt8))
                 case (let payloadLen, true):
-                    NSLog("got length: %@", "\(payloadLen)")
+//                    NSLog("got length: %@", "\(payloadLen)")
                     state = .MaskingKey(bytesRemaining: UInt64(payloadLen), mask: [UInt8]())
                 case (let payloadLen, false):
-                    NSLog("got length: %@", "\(payloadLen)")
+//                    NSLog("got length: %@", "\(payloadLen)")
                     state = .UnmaskedData(bytesRemaining: UInt64(payloadLen))
                 default:
                     state = .Error
@@ -143,7 +143,7 @@ class FrameTokenizer: NSObject {
 
             case .ExtendedLength(let length, shiftOffset: 0):
                 let bytesRemaining = length + UInt64(byte)
-                NSLog("got length: %@", "\(bytesRemaining)")
+//                NSLog("got length: %@", "\(bytesRemaining)")
                 if masked {
                     state = .MaskingKey(bytesRemaining: bytesRemaining, mask: [UInt8]())
                 } else {
@@ -169,7 +169,7 @@ class FrameTokenizer: NSObject {
                 if mask.count < 4 {
                     state = .MaskingKey(bytesRemaining: bytesRemaining, mask: mask)
                 } else {
-                    NSLog("got masking key: %@", "\(mask)")
+//                    NSLog("got masking key: %@", "\(mask)")
                     state = .MaskedData(bytesRemaining: bytesRemaining, mask: GeneratorOf(RingGenerator(collection: mask)), buffer: nil)
                 }
 
@@ -190,7 +190,7 @@ class FrameTokenizer: NSObject {
         
         switch state {
         case .MaskedData(let bytesRemaining, var mask, .Some(let buffer)):
-            NSLog("bytes remaining: %@", "\(bytesRemaining)")
+//            NSLog("bytes remaining: %@", "\(bytesRemaining)")
             delegate?.frameTokenizer(self, didReadData: buffer)
             state = .MaskedData(bytesRemaining: bytesRemaining, mask: mask, buffer: nil)
         default:

@@ -71,12 +71,12 @@ extension DataInputStream: NSStreamDelegate {
 
     func stream(stream: NSStream, handleEvent streamEvent: NSStreamEvent) {
         if streamEvent & .HasBytesAvailable == .HasBytesAvailable {
-            NSLog("HasBytesAvailable: %@", stream)
+//            NSLog("HasBytesAvailable: %@", stream)
             readData()
         }
         if streamEvent & .ErrorOccurred == .ErrorOccurred {
             NSLog("ErrorOccurred: %@", stream.streamError!)
-            //delegate?.dataInputStream(self, didCloseWithError: stream.streamError!)
+            delegate?.dataInputStream(self, didCloseWithError: stream.streamError!)
         }
         if streamEvent & .EndEncountered == .EndEncountered {
             delegate?.dataInputStreamDidReadToEnd(self)

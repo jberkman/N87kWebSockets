@@ -76,7 +76,7 @@ extension DataOutputStream {
             let bytes = UnsafePointer<UInt8>(data.bytes.advancedBy(offset))
             let length = data.length - offset
             let bytesWritten = outputStream.write(bytes, maxLength: length)
-            NSLog("Wrote %@ bytes.", "\(bytesWritten)")
+//            NSLog("Wrote %@ bytes.", "\(bytesWritten)")
             if bytesWritten == length {
                 queue.removeAtIndex(0)
                 offset = 0
@@ -89,8 +89,8 @@ extension DataOutputStream {
         } else if isClosing {
             outputStream.close()
             delegate?.dataOutputStreamDidClose(self)
-        } else {
-            NSLog("No data to write...")
+//        } else {
+//            NSLog("No data to write...")
         }
     }
 
@@ -100,12 +100,12 @@ extension DataOutputStream: NSStreamDelegate {
 
     func stream(stream: NSStream, handleEvent streamEvent: NSStreamEvent) {
         if streamEvent & .HasSpaceAvailable == .HasSpaceAvailable {
-            NSLog("HasSpaceAvailable: %@", stream)
+//            NSLog("HasSpaceAvailable: %@", stream)
             writeData()
         }
         if streamEvent & .ErrorOccurred == .ErrorOccurred {
             NSLog("ErrorOccurred: %@", stream.streamError!)
-            //delegate?.dataOutputStream(self, didCloseWithError: stream.streamError!)
+            delegate?.dataOutputStream(self, didCloseWithError: stream.streamError!)
         }
     }
 
