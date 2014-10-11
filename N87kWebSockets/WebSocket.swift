@@ -76,7 +76,7 @@ public class WebSocket: NSObject {
     private var _currentRequest: NSURLRequest? {
         didSet {
             if let requestScheme = _currentRequest?.URL.scheme {
-                scheme = Scheme(rawValue: requestScheme)
+                scheme = Scheme.fromRaw(requestScheme)
             } else {
                 scheme = nil
             }
@@ -109,7 +109,7 @@ public class WebSocket: NSObject {
         originalRequest = request
         _currentRequest = request
         if let scheme = request.URL.scheme {
-            self.scheme = Scheme(rawValue: scheme)
+            self.scheme = Scheme.fromRaw(scheme)
         }
         self.subprotocols = subprotocols
         super.init()
@@ -165,14 +165,13 @@ public class WebSocket: NSObject {
     }
     
     public func connectWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
-        if let handshake = ClientHandshake(request: currentRequest!) {
-            if let data = handshake.requestData {
-                initializeInputStream(inputStream, outputStream: outputStream)
+        let handshake = ClientHandshake(request: currentRequest!)
+        if let data = handshake.requestData {
+            initializeInputStream(inputStream, outputStream: outputStream)
                 
-                state = .ClientConnecting(handshake)
-                self.outputStream.writeData(data)
-                return
-            }
+            state = .ClientConnecting(handshake)
+            self.outputStream.writeData(data)
+            return
         }
         NSLog("Could not get handshake request data.")
     }

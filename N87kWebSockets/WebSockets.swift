@@ -53,7 +53,7 @@ enum OpCode: UInt8 {
     case Ping = 0x9
     case Pong = 0xA
     var isControl: Bool {
-        return rawValue & 0xF0 != 0
+        return toRaw() & 0xF0 != 0
     }
 }
 

@@ -108,23 +108,23 @@ class FrameTokenizer: NSObject {
             let byte = p.memory
             switch state {
             case .OpCode:
-                if let opCode = OpCode(rawValue: byte & HeaderMasks.OpCode) {
+                if let opCode = OpCode.fromRaw(byte & HeaderMasks.OpCode) {
                     if byte & (HeaderMasks.Rsv1 | HeaderMasks.Rsv2 | HeaderMasks.Rsv3) != 0 {
                         state = .Error
-                        return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.rawValue, userInfo: nil)
+                        return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.toRaw(), userInfo: nil)
                     }
 //                    NSLog("OpCode: %@", "\(byte)")
                     delegate?.frameTokenizer(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
                     state = .Length(isControl: opCode.isControl)
                 } else {
                     state = .Error
-                    return NSError(domain: ErrorDomain, code: Errors.InvalidOpCode.rawValue, userInfo: nil)
+                    return NSError(domain: ErrorDomain, code: Errors.InvalidOpCode.toRaw(), userInfo: nil)
                 }
 
             case .Length(let isControl):
                 if (byte & HeaderMasks.Mask == HeaderMasks.Mask) != masked {
                     state = .Error
-                    return NSError(domain: ErrorDomain, code: Errors.InvalidMask.rawValue, userInfo: nil)
+                    return NSError(domain: ErrorDomain, code: Errors.InvalidMask.toRaw(), userInfo: nil)
                 }
 //                NSLog("Length: %@", "\(byte)")
                 switch (byte & HeaderMasks.PayloadLen, masked) {
@@ -140,7 +140,7 @@ class FrameTokenizer: NSObject {
                     state = .UnmaskedData(bytesRemaining: UInt64(payloadLen))
                 default:
                     state = .Error
-                    return NSError(domain: ErrorDomain, code: Errors.InvalidLength.rawValue, userInfo: nil)
+                    return NSError(domain: ErrorDomain, code: Errors.InvalidLength.toRaw(), userInfo: nil)
                 }
 
             case .ExtendedLength(let length, shiftOffset: 0):

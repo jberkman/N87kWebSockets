@@ -50,18 +50,18 @@ class ClientHandshake: NSObject {
         return "\(key!)\(GUIDs.WebSocket)".N87k_SHA1Digest
     }
 
-    init?(request: NSURLRequest) {
+    init(request: NSURLRequest) {
         self.request = request
         super.init()
-        if request.URL.host == nil ||
-            "GET" != request.HTTPMethod ||
-            scheme == nil {
-                return nil
-        }
+//        if request.URL.host == nil ||
+//            "GET" != request.HTTPMethod ||
+//            scheme == nil {
+//                return nil
+//        }
     }
 
     private var scheme: Scheme? {
-        return request.URL.scheme != nil ? Scheme(rawValue: request.URL.scheme!) : nil
+        return request.URL.scheme != nil ? Scheme.fromRaw(request.URL.scheme!) : nil
     }
 
     var requestData: NSData? {
@@ -111,11 +111,10 @@ class ClientHandshake: NSObject {
                     headerFields[HTTPHeaderFields.SecWebSocketAccept] as? NSString != expectedAccept ||
                     headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {
                         NSLog("%@ Invalid HTTP version %@, status code: %@, or header fields: %@", __FUNCTION__, HTTPVersion, "\(statusCode)", headerFields)
-                } else if let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields) {
+                } else {
+                    let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields)
                     let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue() as? AnyObject as? NSData
                     return .Response(response, responseData)
-                } else {
-                    NSLog("%@ Could not create response", __FUNCTION__)
                 }
             } else {
                 NSLog("%@ No header fields", __FUNCTION__)

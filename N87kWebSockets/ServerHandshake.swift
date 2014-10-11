@@ -43,7 +43,7 @@ class ServerHandshake: NSObject {
 
     var responseData: NSData? {
         let statusCode = HTTPStatusCodes.Upgrade
-        let responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NSHTTPURLResponse.localizedStringForStatusCode(statusCode), HTTPVersions.HTTP1_1).takeRetainedValue()
+        let responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NSHTTPURLResponse.localizedStringForStatusCode(statusCode) as NSString, HTTPVersions.HTTP1_1).takeRetainedValue()
         NSLog("%@", "expectedAccept: \(expectedAccept)")
         let headers: [NSString: NSString] = [
             HTTPHeaderFields.Connection: HTTPHeaderValues.Upgrade,
