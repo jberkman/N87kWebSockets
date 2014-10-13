@@ -113,6 +113,7 @@ class FrameTokenizer: NSObject {
                         state = .Error
                         return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.rawValue, userInfo: nil)
                     }
+//                    NSLog("OpCode: %@", "\(byte)")
                     delegate?.frameTokenizer(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
                     state = .Length(isControl: opCode.isControl)
                 } else {
@@ -125,6 +126,7 @@ class FrameTokenizer: NSObject {
                     state = .Error
                     return NSError(domain: ErrorDomain, code: Errors.InvalidMask.rawValue, userInfo: nil)
                 }
+//                NSLog("Length: %@", "\(byte)")
                 switch (byte & HeaderMasks.PayloadLen, masked) {
                 case (ExtendedLength.Short, _) where !isControl.isControl:
                     state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt16) - sizeof(UInt8))
@@ -142,8 +144,7 @@ class FrameTokenizer: NSObject {
                 }
 
             case .ExtendedLength(let length, shiftOffset: 0):
-                let bytesRemaining = length + UInt64(byte)
-//                NSLog("got length: %@", "\(bytesRemaining)")
+                let bytesRemaining = (length << 8) + UInt64(byte)
                 if masked {
                     state = .MaskingKey(bytesRemaining: bytesRemaining, mask: [UInt8]())
                 } else {
@@ -151,7 +152,7 @@ class FrameTokenizer: NSObject {
                 }
 
             case .ExtendedLength(let length, let shiftOffset):
-                state = .ExtendedLength(length: length + UInt64(byte) << UInt64(shiftOffset), shiftOffset: shiftOffset - sizeof(UInt8))
+                state = .ExtendedLength(length: UInt64(byte) + (length << 8), shiftOffset: shiftOffset - sizeof(UInt8))
 
             case .UnmaskedData(let bytesRemaining):
                 let bytesRead64 = min(bytesRemaining, UInt64(p.distanceTo(finish)))
