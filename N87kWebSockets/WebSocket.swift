@@ -156,6 +156,13 @@ public class WebSocket: NSObject {
             break
         }
     }
+
+    public func disconnect() {
+        switch state {
+        case .Closed: break
+        default: state = .Closing
+        }
+    }
     
     public func connectWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
         if let handshake = ClientHandshake(request: currentRequest!) {
