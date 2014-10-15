@@ -25,6 +25,7 @@
 //
 
 import Foundation
+import N87kLog
 
 protocol DataInputStreamDelegate: NSObjectProtocol {
     func dataInputStream(dataInputStream: DataInputStream, didReadData data: NSData)
@@ -57,7 +58,7 @@ extension DataInputStream {
         let data = NSMutableData(length: bufferSize)
         let bytesRead = inputStream.read(UnsafeMutablePointer<UInt8>(data.mutableBytes), maxLength: bufferSize)
         if bytesRead < 0 {
-            NSLog("Error reading from input")
+            dlog("Error reading from input")
             delegate?.dataInputStream(self, didCloseWithError: inputStream.streamError!)
             return
         }
@@ -71,11 +72,11 @@ extension DataInputStream: NSStreamDelegate {
 
     func stream(stream: NSStream, handleEvent streamEvent: NSStreamEvent) {
         if streamEvent & .HasBytesAvailable == .HasBytesAvailable {
-//            NSLog("HasBytesAvailable: %@", stream)
+//            dlog("HasBytesAvailable: %@", stream)
             readData()
         }
         if streamEvent & .ErrorOccurred == .ErrorOccurred {
-            NSLog("ErrorOccurred: %@", stream.streamError!)
+            dlog("ErrorOccurred: \(stream.streamError!)")
             delegate?.dataInputStream(self, didCloseWithError: stream.streamError!)
         }
         if streamEvent & .EndEncountered == .EndEncountered {

@@ -25,6 +25,7 @@
 //
 
 import Foundation
+import N87kLog
 
 protocol FrameTokenizerDelegate: NSObjectProtocol {
     func frameTokenizer(frameTokenizer: FrameTokenizer, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit))
@@ -93,7 +94,7 @@ class FrameTokenizer: NSObject {
             }
 
         default:
-            NSLog("Invalid state")
+            dlog("Invalid state")
         }
     }
 
@@ -113,7 +114,7 @@ class FrameTokenizer: NSObject {
                         state = .Error
                         return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.toRaw(), userInfo: nil)
                     }
-//                    NSLog("OpCode: %@", "\(byte)")
+//                    dlog("OpCode: %@", "\(byte)")
                     delegate?.frameTokenizer(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
                     state = .Length(isControl: opCode.isControl)
                 } else {
@@ -126,17 +127,17 @@ class FrameTokenizer: NSObject {
                     state = .Error
                     return NSError(domain: ErrorDomain, code: Errors.InvalidMask.toRaw(), userInfo: nil)
                 }
-//                NSLog("Length: %@", "\(byte)")
+//                dlog("Length: %@", "\(byte)")
                 switch (byte & HeaderMasks.PayloadLen, masked) {
                 case (ExtendedLength.Short, _) where !isControl.isControl:
                     state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt16) - sizeof(UInt8))
                 case (ExtendedLength.Long, _) where !isControl.isControl:
                     state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt64) - sizeof(UInt8))
                 case (let payloadLen, true):
-//                    NSLog("got length: %@", "\(payloadLen)")
+//                    dlog("got length: %@", "\(payloadLen)")
                     state = .MaskingKey(bytesRemaining: UInt64(payloadLen), mask: [UInt8]())
                 case (let payloadLen, false):
-//                    NSLog("got length: %@", "\(payloadLen)")
+//                    dlog("got length: %@", "\(payloadLen)")
                     state = .UnmaskedData(bytesRemaining: UInt64(payloadLen))
                 default:
                     state = .Error
@@ -170,7 +171,7 @@ class FrameTokenizer: NSObject {
                 if mask.count < 4 {
                     state = .MaskingKey(bytesRemaining: bytesRemaining, mask: mask)
                 } else {
-//                    NSLog("got masking key: %@", "\(mask)")
+//                    dlog("got masking key: %@", "\(mask)")
                     state = .MaskedData(bytesRemaining: bytesRemaining, mask: GeneratorOf(RingGenerator(collection: mask)), buffer: nil)
                 }
 
@@ -191,7 +192,7 @@ class FrameTokenizer: NSObject {
         
         switch state {
         case .MaskedData(let bytesRemaining, var mask, .Some(let buffer)):
-//            NSLog("bytes remaining: %@", "\(bytesRemaining)")
+//            dlog("bytes remaining: %@", "\(bytesRemaining)")
             delegate?.frameTokenizer(self, didReadData: buffer)
             state = .MaskedData(bytesRemaining: bytesRemaining, mask: mask, buffer: nil)
         default:

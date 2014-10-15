@@ -25,6 +25,7 @@
 //
 
 import Foundation
+import N87kLog
 
 @objc
 public protocol WebSocketDelegate: NSObjectProtocol {
@@ -146,7 +147,7 @@ public class WebSocket: NSObject {
             var outputStream: NSOutputStream?
             NSStream.getStreamsToHostWithName(currentRequest!.URL.host!, port: port, inputStream: &inputStream, outputStream: &outputStream)
             if inputStream == nil || outputStream == nil {
-                NSLog("Could not open streams")
+                dlog("Could not open streams")
                 return
             }
             
@@ -173,7 +174,7 @@ public class WebSocket: NSObject {
             self.outputStream.writeData(data)
             return
         }
-        NSLog("Could not get handshake request data.")
+        dlog("Could not get handshake request data.")
     }
     
     public func acceptConnectionWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
@@ -198,7 +199,7 @@ public class WebSocket: NSObject {
             }
 
         default:
-            NSLog("%@: Can't write text unless open", __FUNCTION__)
+            dlog("\(__FUNCTION__): Can't write text unless open")
         }
         return false
     }
@@ -213,7 +214,7 @@ public class WebSocket: NSObject {
             }
 
         default:
-            NSLog("%@: Can't write binary data unless open", __FUNCTION__)
+            dlog("\(__FUNCTION__): Can't write binary data unless open")
         }
         return false
     }
@@ -230,7 +231,7 @@ public class WebSocket: NSObject {
             }
 
         default:
-            NSLog("%@: Can't pint unless open", __FUNCTION__)
+            dlog("\(__FUNCTION__): Can't ping unless open")
         }
         return false
     }
@@ -292,7 +293,7 @@ extension WebSocket {
 
         case .Invalid:
             // FIXME: Notify delegate of error
-            NSLog("Invalid handshake.")
+            dlog("Invalid handshake.")
             state = .Closing
 
         case .Response(let response, let data):
@@ -312,7 +313,7 @@ extension WebSocket {
             
         case .Invalid:
             // FIXME: Notify delegate of error
-            NSLog("Invalid handshake.")
+            dlog("Invalid handshake.")
             state = .Closing
 
         case .Request(let request, let data):
@@ -361,7 +362,7 @@ extension WebSocket: DataInputStreamDelegate {
     }
 
     func dataInputStream(dataInputStream: DataInputStream, didCloseWithError error: NSError) {
-        NSLog("%@ %@", __FUNCTION__, error)
+        dlog("\(__FUNCTION__): \(error)")
         inputStream = nil
         switch state {
         case .Closing, .Closed:
@@ -373,7 +374,7 @@ extension WebSocket: DataInputStreamDelegate {
     }
 
     func dataInputStreamDidReadToEnd(dataInputStream: DataInputStream) {
-        NSLog("%@", __FUNCTION__)
+        dlog(__FUNCTION__)
         state = .Closing
     }
 
@@ -382,7 +383,7 @@ extension WebSocket: DataInputStreamDelegate {
 extension WebSocket: DataOutputStreamDelegate {
 
     func dataOutputStream(dataOutputStream: DataOutputStream, didCloseWithError error: NSError) {
-        NSLog("%@ %@", __FUNCTION__, error)
+        dlog("\(__FUNCTION__): \(error)")
         outputStream = nil
         switch state {
         case .Closing, .Closed:
@@ -394,7 +395,7 @@ extension WebSocket: DataOutputStreamDelegate {
     }
 
     func dataOutputStreamDidClose(dataOutputStream: DataOutputStream) {
-        NSLog("%@", __FUNCTION__)
+        dlog(__FUNCTION__)
         state = .Closed
     }
 }
@@ -402,7 +403,7 @@ extension WebSocket: DataOutputStreamDelegate {
 extension WebSocket: FrameTokenizerDelegate {
 
     func frameTokenizer(frameTokenizer: FrameTokenizer, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit)) {
-//        NSLog("Got frame with opCode: %@", "\(opCode.rawValue)")
+//        dlog("Got frame with opCode: %@", "\(opCode.rawValue)")
         var isBinary = false
         switch state {
         case .Open(let tokenizer, let serializer, _, _):
@@ -418,16 +419,16 @@ extension WebSocket: FrameTokenizerDelegate {
             case .Pong where isFinal:
                 delegate?.webSocketDidPong?(self)
             default:
-                NSLog("Invalid opCode for state.");
+                dlog("Invalid opCode for state.");
             }
             state = .Open(tokenizer: tokenizer, serializer: serializer, opCode: opCode, isFinal: isFinal)
         default:
-            NSLog("Invalid state for opCode")
+            dlog("Invalid state for opCode")
         }
     }
 
     func frameTokenizer(frameTokenizer: FrameTokenizer, didReadFrameLength frameLength: UInt64) {
-//        NSLog("%@ %@", __FUNCTION__, "\(frameLength)")
+//        dlog("%@ %@", __FUNCTION__, "\(frameLength)")
         switch state {
         case .Open(_, let serializer, .Some(.Ping), _):
             if let data = serializer.beginFrameWithOpCode(.Pong, isFinal: true, length: frameLength) {
@@ -441,7 +442,7 @@ extension WebSocket: FrameTokenizerDelegate {
     }
 
     func frameTokenizer(frameTokenizer: FrameTokenizer, didReadData data: NSData) {
-//        NSLog("%@ %@", __FUNCTION__, data)
+//        dlog("%@ %@", __FUNCTION__, data)
         switch state {
         case .Open(_, _, .Some(let opCode), _):
             switch opCode {
@@ -458,7 +459,7 @@ extension WebSocket: FrameTokenizerDelegate {
     }
 
     func frameTokenizerDidEndFrame(frameTokenizer: FrameTokenizer) {
-//        NSLog("%@", __FUNCTION__)
+//        dlog("%@", __FUNCTION__)
         switch state {
         case .Open(let tokenizer, let serializer, .Some(let opCode), .Some(let isFinal)):
             switch opCode {

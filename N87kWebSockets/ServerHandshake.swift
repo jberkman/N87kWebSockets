@@ -27,6 +27,7 @@
 import CFNetwork
 import Foundation
 import Security
+import N87kLog
 
 class ServerHandshake: NSObject {
     enum Result {
@@ -44,7 +45,7 @@ class ServerHandshake: NSObject {
     var responseData: NSData? {
         let statusCode = HTTPStatusCodes.Upgrade
         let responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NSHTTPURLResponse.localizedStringForStatusCode(statusCode) as NSString, HTTPVersions.HTTP1_1).takeRetainedValue()
-        NSLog("%@", "expectedAccept: \(expectedAccept)")
+        dlog("expectedAccept: \(expectedAccept)")
         let headers: [NSString: NSString] = [
             HTTPHeaderFields.Connection: HTTPHeaderValues.Upgrade,
             HTTPHeaderFields.Upgrade: HTTPHeaderValues.WebSocket,

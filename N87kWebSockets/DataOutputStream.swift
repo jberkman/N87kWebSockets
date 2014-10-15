@@ -25,6 +25,7 @@
 //
 
 import Foundation
+import N87kLog
 
 protocol DataOutputStreamDelegate: NSObjectProtocol {
     func dataOutputStream(dataOutputStream: DataOutputStream, didCloseWithError error: NSError)
@@ -76,21 +77,21 @@ extension DataOutputStream {
             let bytes = UnsafePointer<UInt8>(data.bytes.advancedBy(offset))
             let length = data.length - offset
             let bytesWritten = outputStream.write(bytes, maxLength: length)
-//            NSLog("Wrote %@ bytes.", "\(bytesWritten)")
+//            dlog("Wrote %@ bytes.", "\(bytesWritten)")
             if bytesWritten == length {
                 queue.removeAtIndex(0)
                 offset = 0
             } else if bytesWritten > 0 {
                 offset += bytesWritten
             } else {
-                NSLog("Error writing bytes: %@", outputStream.streamError!)
+                dlog("Error writing bytes: \(outputStream.streamError!)")
                 delegate?.dataOutputStream(self, didCloseWithError: outputStream.streamError!)
             }
         } else if isClosing {
             outputStream.close()
             delegate?.dataOutputStreamDidClose(self)
 //        } else {
-//            NSLog("No data to write...")
+//            dlog("No data to write...")
         }
     }
 
@@ -100,11 +101,11 @@ extension DataOutputStream: NSStreamDelegate {
 
     func stream(stream: NSStream, handleEvent streamEvent: NSStreamEvent) {
         if streamEvent & .HasSpaceAvailable == .HasSpaceAvailable {
-//            NSLog("HasSpaceAvailable: %@", stream)
+//            dlog("HasSpaceAvailable: %@", stream)
             writeData()
         }
         if streamEvent & .ErrorOccurred == .ErrorOccurred {
-            NSLog("ErrorOccurred: %@", stream.streamError!)
+            dlog("ErrorOccurred: \(stream.streamError!)")
             delegate?.dataOutputStream(self, didCloseWithError: stream.streamError!)
         }
     }

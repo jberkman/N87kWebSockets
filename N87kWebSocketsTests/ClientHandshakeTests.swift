@@ -75,7 +75,7 @@ class ClientHandshakeTests: XCTestCase {
         XCTAssertNotNil(data)
         
         if let data = data {
-            NSLog("%@", NSString(data: data, encoding: NSUTF8StringEncoding)!)
+            dlog("%@", NSString(data: data, encoding: NSUTF8StringEncoding)!)
             let request = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(1)).takeRetainedValue()
             CFHTTPMessageAppendBytes(request, UnsafePointer<UInt8>(data.bytes), data.length)
             XCTAssertEqual(CFHTTPMessageIsHeaderComplete(request), Boolean(1))

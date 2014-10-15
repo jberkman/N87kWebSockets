@@ -25,6 +25,7 @@
 //
 
 import Foundation
+import N87kLog
 
 class FrameSerializer: NSObject {
 
@@ -77,7 +78,7 @@ class FrameSerializer: NSObject {
                 data.increaseLengthBy(sizeof(UInt32))
                 let mask = UnsafeMutableBufferPointer<UInt8>(start: bytes, count: sizeof(UInt32))
                 if SecRandomCopyBytes(kSecRandomDefault, UInt(mask.count), mask.baseAddress) != 0 {
-                    NSLog("Could not generate random mask.")
+                    dlog("Could not generate random mask.")
                     return nil
                 }
                 state = .MaskedData(bytesRemaining: length, mask: [UInt8](mask), maskOffset: 0)

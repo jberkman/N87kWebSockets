@@ -27,6 +27,7 @@
 import CFNetwork
 import Foundation
 import Security
+import N87kLog
 
 class ClientHandshake: NSObject {
     enum Result {
@@ -41,7 +42,7 @@ class ClientHandshake: NSObject {
         let keyLength = 16
         let data = NSMutableData(length: keyLength)
         if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) != 0 {
-            NSLog("Could not generate random key");
+            dlog("Could not generate random key");
             return nil
         }
         return data.base64EncodedStringWithOptions(nil)
@@ -110,17 +111,17 @@ class ClientHandshake: NSObject {
                     headerFields[HTTPHeaderFields.Upgrade]?.lowercaseString != HTTPHeaderValues.WebSocket.lowercaseString ||
                     headerFields[HTTPHeaderFields.SecWebSocketAccept] as? NSString != expectedAccept ||
                     headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {
-                        NSLog("%@ Invalid HTTP version %@, status code: %@, or header fields: %@", __FUNCTION__, HTTPVersion, "\(statusCode)", headerFields)
+                        dlog("\(__FUNCTION__) Invalid HTTP version \(HTTPVersion), status code: \(statusCode), or header fields: \(headerFields)")
                 } else {
                     let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields)
                     let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue() as? AnyObject as? NSData
                     return .Response(response, responseData)
                 }
             } else {
-                NSLog("%@ No header fields", __FUNCTION__)
+                dlog("\(__FUNCTION__): No header fields")
             }
         } else {
-            NSLog("%@ No HTTP Version", __FUNCTION__)
+            dlog("\(__FUNCTION__): No HTTP Version")
         }
         return .Invalid
     }
