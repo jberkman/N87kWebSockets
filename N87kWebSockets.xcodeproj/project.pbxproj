@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		16066F3719EECB5800EB5088 /* N87kLog.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16E7FC3019EEC8F600D6CFCB /* N87kLog.framework */; };
+		16066F5019EF81C100EB5088 /* dlog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16066F4F19EF81C100EB5088 /* dlog.swift */; };
 		160C637019D31C3B000E56FC /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C636F19D31C3B000E56FC /* WebSockets.swift */; };
 		160C637219D31EBB000E56FC /* FrameSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C637119D31EBB000E56FC /* FrameSerializer.swift */; };
 		162E6FA219D10C4B00E384D1 /* NSString+N87kWebSockets.m in Sources */ = {isa = PBXBuildFile; fileRef = 162E6FA019D10C4B00E384D1 /* NSString+N87kWebSockets.m */; };
@@ -33,31 +33,8 @@
 		16F533B319E5203100CCF79C /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C636F19D31C3B000E56FC /* WebSockets.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		16066F3819EECB5F00EB5088 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 16E7FC2A19EEC8F600D6CFCB /* N87kLog.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 16E7FC1019EEC8E100D6CFCB;
-			remoteInfo = N87kLog;
-		};
-		16E7FC2F19EEC8F600D6CFCB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 16E7FC2A19EEC8F600D6CFCB /* N87kLog.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 16E7FC1119EEC8E100D6CFCB;
-			remoteInfo = N87kLog;
-		};
-		16E7FC3119EEC8F600D6CFCB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 16E7FC2A19EEC8F600D6CFCB /* N87kLog.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 16E7FC1C19EEC8E100D6CFCB;
-			remoteInfo = N87kLogTests;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
+		16066F4F19EF81C100EB5088 /* dlog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = dlog.swift; sourceTree = "<group>"; };
 		160C636F19D31C3B000E56FC /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
 		160C637119D31EBB000E56FC /* FrameSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameSerializer.swift; sourceTree = "<group>"; };
 		162E6FA019D10C4B00E384D1 /* NSString+N87kWebSockets.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+N87kWebSockets.m"; sourceTree = "<group>"; };
@@ -72,7 +49,6 @@
 		16B2D99919D555E900887D73 /* ServerHandshake.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerHandshake.swift; sourceTree = "<group>"; };
 		16CFFB7519D118A8006650C9 /* FrameTokenizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameTokenizer.swift; sourceTree = "<group>"; };
 		16CFFB7719D14C93006650C9 /* ClientHandshake.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientHandshake.swift; sourceTree = "<group>"; };
-		16E7FC2A19EEC8F600D6CFCB /* N87kLog.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = N87kLog.xcodeproj; path = ../N87kLog/N87kLog.xcodeproj; sourceTree = "<group>"; };
 		16E8E86319CF8534005DAB67 /* DataOutputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataOutputStream.swift; sourceTree = "<group>"; };
 		16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataInputStream.swift; sourceTree = "<group>"; };
 		16F533A719E4788000CCF79C /* ClientHandshakeTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientHandshakeTests.swift; sourceTree = "<group>"; };
@@ -84,7 +60,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16066F3719EECB5800EB5088 /* N87kLog.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,7 +79,6 @@
 				16AE116819CE1DD3003E9B4B /* N87kWebSockets */,
 				16AE117219CE1DD3003E9B4B /* N87kWebSocketsTests */,
 				16AE116719CE1DD3003E9B4B /* Products */,
-				16E7FC2A19EEC8F600D6CFCB /* N87kLog.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -120,6 +94,7 @@
 		16AE116819CE1DD3003E9B4B /* N87kWebSockets */ = {
 			isa = PBXGroup;
 			children = (
+				16066F4F19EF81C100EB5088 /* dlog.swift */,
 				16CFFB7719D14C93006650C9 /* ClientHandshake.swift */,
 				16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */,
 				16E8E86319CF8534005DAB67 /* DataOutputStream.swift */,
@@ -163,15 +138,6 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		16E7FC2B19EEC8F600D6CFCB /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				16E7FC3019EEC8F600D6CFCB /* N87kLog.framework */,
-				16E7FC3219EEC8F600D6CFCB /* N87kLogTests.xctest */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -199,7 +165,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				16066F3919EECB5F00EB5088 /* PBXTargetDependency */,
 			);
 			name = N87kWebSockets;
 			productName = N87kWebSockets;
@@ -251,12 +216,6 @@
 			mainGroup = 16AE115C19CE1DD3003E9B4B;
 			productRefGroup = 16AE116719CE1DD3003E9B4B /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 16E7FC2B19EEC8F600D6CFCB /* Products */;
-					ProjectRef = 16E7FC2A19EEC8F600D6CFCB /* N87kLog.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				16AE116519CE1DD3003E9B4B /* N87kWebSockets */,
@@ -264,23 +223,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		16E7FC3019EEC8F600D6CFCB /* N87kLog.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = N87kLog.framework;
-			remoteRef = 16E7FC2F19EEC8F600D6CFCB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		16E7FC3219EEC8F600D6CFCB /* N87kLogTests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = N87kLogTests.xctest;
-			remoteRef = 16E7FC3119EEC8F600D6CFCB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		16AE116419CE1DD3003E9B4B /* Resources */ = {
@@ -306,6 +248,7 @@
 			files = (
 				16E8E86619CF8CA9005DAB67 /* DataInputStream.swift in Sources */,
 				16B2D99819D5419500887D73 /* RingGenerator.swift in Sources */,
+				16066F5019EF81C100EB5088 /* dlog.swift in Sources */,
 				16B2D9A119D58E2E00887D73 /* ServerHandshake.swift in Sources */,
 				16E8E86419CF8534005DAB67 /* DataOutputStream.swift in Sources */,
 				16AE118219CE2438003E9B4B /* WebSocket.swift in Sources */,
@@ -336,14 +279,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		16066F3919EECB5F00EB5088 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = N87kLog;
-			targetProxy = 16066F3819EECB5F00EB5088 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		16AE117719CE1DD3003E9B4B /* Debug */ = {

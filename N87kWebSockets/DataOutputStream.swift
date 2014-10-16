@@ -25,7 +25,6 @@
 //
 
 import Foundation
-import N87kLog
 
 protocol DataOutputStreamDelegate: NSObjectProtocol {
     func dataOutputStream(dataOutputStream: DataOutputStream, didCloseWithError error: NSError)

@@ -25,7 +25,6 @@
 //
 
 import Foundation
-import N87kLog
 
 class FrameSerializer: NSObject {
 

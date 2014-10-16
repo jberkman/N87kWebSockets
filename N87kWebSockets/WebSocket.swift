@@ -25,7 +25,6 @@
 //
 
 import Foundation
-import N87kLog
 
 @objc
 public protocol WebSocketDelegate: NSObjectProtocol {

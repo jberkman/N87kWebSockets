@@ -25,7 +25,6 @@
 //
 
 import Foundation
-import N87kLog
 
 protocol DataInputStreamDelegate: NSObjectProtocol {
     func dataInputStream(dataInputStream: DataInputStream, didReadData data: NSData)

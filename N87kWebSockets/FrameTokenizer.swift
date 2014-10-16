@@ -25,7 +25,6 @@
 //
 
 import Foundation
-import N87kLog
 
 protocol FrameTokenizerDelegate: NSObjectProtocol {
     func frameTokenizer(frameTokenizer: FrameTokenizer, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit))

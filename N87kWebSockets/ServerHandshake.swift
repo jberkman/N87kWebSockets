@@ -27,7 +27,6 @@
 import CFNetwork
 import Foundation
 import Security
-import N87kLog
 
 class ServerHandshake: NSObject {
     enum Result {
