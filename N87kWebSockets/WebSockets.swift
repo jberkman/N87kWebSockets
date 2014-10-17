@@ -76,7 +76,7 @@ struct ExtendedLength {
 public let ErrorDomain = "N87kWebSocketErrorDomain"
 
 public enum Errors: Int {
-    case InvalidOpCode = 1, InvalidReservedBit, InvalidLength, InvalidMask
+    case InvalidOpCode = 1, InvalidReservedBit, InvalidLength, InvalidMask, InvalidHandshake
 }
 
 struct HTTPVersions {
@@ -114,3 +114,12 @@ public enum Scheme: String {
     public var isSecure: Bool { return self == WSS }
     public var defaultPort: Int { return self == WS ? 80 : 443 }
 }
+
+public let NormalStatusCode: UInt16 = 1000
+public let GoingAwayStatusCode: UInt16 = 1001
+public let ProtocolErrorStatusCode: UInt16 = 1002
+public let UnacceptableDataStatusCode: UInt16 = 1003
+public let PolicyViolationStatusCode: UInt16 = 1008
+public let MessageTooLargeStatusCode: UInt16 = 1009
+public let MissingExtensionStatusCode: UInt16 = 1010
+public let UnexpectedConditionStatusCode: UInt16 = 1011

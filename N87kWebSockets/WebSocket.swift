@@ -31,8 +31,8 @@ public protocol WebSocketDelegate: NSObjectProtocol {
     optional func webSocket(webSocket: WebSocket, shouldAcceptConnectionWithRequest request: NSURLRequest) -> Bool
 
     func webSocketDidOpen(webSocket: WebSocket)
-    func webSocketDidClose(webSocket: WebSocket)
-    func webSocket(webSocket: WebSocket, didFailWithError error: NSError)
+    func webSocket(webSocket: WebSocket, didCloseWithStatusCode statusCode: UInt16)
+    func webSocket(webSocket: WebSocket, didCloseWithError error: NSError)
     
     func webSocketWillBeginTextData(webSocket: WebSocket)
     func webSocketWillBeginBinaryData(webSocket: WebSocket)
@@ -49,7 +49,9 @@ public class WebSocket: NSObject {
         case ClientConnecting(ClientHandshake)
         case ServerConnecting(ServerHandshake)
         case Open(tokenizer: FrameTokenizer, serializer: FrameSerializer, opCode: OpCode?, isFinal: Bool?)
-        case Closing, Closed
+        case ClosingWithError(NSError)
+        case ClosingWithStatusCode(UInt16)
+        case Closed
     }
 
     private var scheme: Scheme?
@@ -58,12 +60,14 @@ public class WebSocket: NSObject {
             switch (oldValue, state) {
             case (.ClientConnecting, .Open):
                 delegate?.webSocketDidOpen(self)
-            case (_, .Closing) where outputStream != nil:
+            case (_, .ClosingWithError), (_, .ClosingWithStatusCode) where outputStream != nil:
                 outputStream.close()
-            case (_, .Closing) where outputStream == nil:
+            case (_, .ClosingWithError), (_, .ClosingWithStatusCode) where outputStream == nil:
                 state = .Closed
-            case (_, .Closed):
-                delegate?.webSocketDidClose(self)
+            case (.ClosingWithError(let error), .Closed):
+                delegate?.webSocket(self, didCloseWithError: error)
+            case (.ClosingWithStatusCode(let statusCode), .Closed):
+                delegate?.webSocket(self, didCloseWithStatusCode: statusCode)
             default:
                 break
             }
@@ -136,8 +140,7 @@ public class WebSocket: NSObject {
         switch state {
         case .Closed where currentRequest != nil:
             if currentRequest!.URL.host == nil || scheme == nil || currentRequest!.HTTPMethod != "GET" {
-                let error = NSError(domain: NSCocoaErrorDomain, code: NSURLErrorBadURL, userInfo: nil)
-                NSTimer.scheduledTimerWithTimeInterval(0, target: self, selector: "delegateErrorTimerDidFire:", userInfo: error, repeats: false)
+                delegate?.webSocket(self, didCloseWithError: NSError(domain: NSURLErrorDomain, code: NSURLErrorBadURL, userInfo: nil))
                 return
             }
             
@@ -146,7 +149,7 @@ public class WebSocket: NSObject {
             var outputStream: NSOutputStream?
             NSStream.getStreamsToHostWithName(currentRequest!.URL.host!, port: port, inputStream: &inputStream, outputStream: &outputStream)
             if inputStream == nil || outputStream == nil {
-                dlog("Could not open streams")
+                delegate?.webSocket(self, didCloseWithError: NSError(domain: NSURLErrorDomain, code: NSURLErrorCannotConnectToHost, userInfo: nil))
                 return
             }
             
@@ -157,13 +160,6 @@ public class WebSocket: NSObject {
         }
     }
 
-    public func disconnect() {
-        switch state {
-        case .Closed: break
-        default: state = .Closing
-        }
-    }
-    
     public func connectWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
         let handshake = ClientHandshake(request: currentRequest!)
         if let data = handshake.requestData {
@@ -171,9 +167,9 @@ public class WebSocket: NSObject {
                 
             state = .ClientConnecting(handshake)
             self.outputStream.writeData(data)
-            return
+        } else {
+            state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.toRaw(), userInfo: nil))
         }
-        dlog("Could not get handshake request data.")
     }
     
     public func acceptConnectionWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
@@ -235,11 +231,11 @@ public class WebSocket: NSObject {
         return false
     }
 
-    public func closeWithStatusCode(status: UInt16, message: String?) {
+    public func closeWithStatusCode(statusCode: UInt16, message: String?) {
         switch state {
         case .Open(_, let serializer, _, _):
             let data = NSMutableData(capacity: ExtendedLength.Short - 1)
-            var networkStatus = status.bigEndian
+            var networkStatus = statusCode.bigEndian
             withUnsafePointer(&networkStatus) { (statusBytes) -> Void in
                 data.appendBytes(UnsafePointer<Void>(statusBytes), length: sizeof(UInt16))
             }
@@ -255,7 +251,7 @@ public class WebSocket: NSObject {
                 outputStream.writeData(header)
                 outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
             }
-            state = .Closing
+            state = .ClosingWithStatusCode(statusCode)
             
         default:
             break
@@ -264,10 +260,6 @@ public class WebSocket: NSObject {
 }
 
 extension WebSocket {
-
-    @objc private func delegateErrorTimerDidFire(timer: NSTimer) {
-        delegate?.webSocket(self, didFailWithError: timer.userInfo as NSError)
-    }
 
     func initializeInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
         let securityLevel = scheme!.isSecure ? NSStreamSocketSecurityLevelTLSv1 : NSStreamSocketSecurityLevelNone
@@ -291,9 +283,7 @@ extension WebSocket {
             break
 
         case .Invalid:
-            // FIXME: Notify delegate of error
-            dlog("Invalid handshake.")
-            state = .Closing
+            state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.toRaw(), userInfo: nil))
 
         case .Response(let response, let data):
             let tokenizer = FrameTokenizer(masked: false)
@@ -311,12 +301,11 @@ extension WebSocket {
             break
             
         case .Invalid:
-            // FIXME: Notify delegate of error
-            dlog("Invalid handshake.")
-            state = .Closing
+            state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.toRaw(), userInfo: nil))
 
         case .Request(let request, let data):
             if delegate?.webSocket?(self, shouldAcceptConnectionWithRequest: request) ?? true {
+                _currentRequest = request
                 if let responseData = handshake.responseData {
                     outputStream.writeData(responseData)
                     let tokenizer = FrameTokenizer(masked: true)
@@ -329,7 +318,7 @@ extension WebSocket {
             }
             switch state {
             case .ServerConnecting:
-                state = .Closing
+                state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.toRaw(), userInfo: nil))
             default:
                 break
             }
@@ -338,8 +327,7 @@ extension WebSocket {
 
     private func handleTokenizerError(error: NSError?) {
         if error != nil {
-            delegate?.webSocket(self, didFailWithError: error!)
-            state = .Closing
+            state = .ClosingWithError(error!)
         }
     }
 
@@ -361,20 +349,24 @@ extension WebSocket: DataInputStreamDelegate {
     }
 
     func dataInputStream(dataInputStream: DataInputStream, didCloseWithError error: NSError) {
-        dlog("\(__FUNCTION__): \(error)")
+        dlog("\(__FUNCTION__): \(error) (\(state))")
         inputStream = nil
         switch state {
-        case .Closing, .Closed:
+        case .ClosingWithError, .ClosingWithStatusCode, .Closed:
             break
         default:
-            delegate?.webSocket(self, didFailWithError: error)
-            state = .Closing
+            state = .ClosingWithError(error)
         }
     }
 
     func dataInputStreamDidReadToEnd(dataInputStream: DataInputStream) {
         dlog(__FUNCTION__)
-        state = .Closing
+        inputStream = nil
+        if let stream = outputStream {
+            stream.close()
+        } else {
+            state = .Closed
+        }
     }
 
 }
@@ -385,16 +377,18 @@ extension WebSocket: DataOutputStreamDelegate {
         dlog("\(__FUNCTION__): \(error)")
         outputStream = nil
         switch state {
-        case .Closing, .Closed:
+        case .Closed:
             break
+        case .ClosingWithError, .ClosingWithStatusCode:
+            state = .Closed
         default:
-            delegate?.webSocket(self, didFailWithError: error)
-            state = .Closing
+            state = .ClosingWithError(error)
         }
     }
 
     func dataOutputStreamDidClose(dataOutputStream: DataOutputStream) {
         dlog(__FUNCTION__)
+        outputStream = nil
         state = .Closed
     }
 }
@@ -418,7 +412,8 @@ extension WebSocket: FrameTokenizerDelegate {
             case .Pong where isFinal:
                 delegate?.webSocketDidPong?(self)
             default:
-                dlog("Invalid opCode for state.");
+                closeWithStatusCode(NormalStatusCode, message: nil)
+                return
             }
             state = .Open(tokenizer: tokenizer, serializer: serializer, opCode: opCode, isFinal: isFinal)
         default:
@@ -433,7 +428,7 @@ extension WebSocket: FrameTokenizerDelegate {
             if let data = serializer.beginFrameWithOpCode(.Pong, isFinal: true, length: frameLength) {
                 outputStream.writeData(data)
             } else {
-                state = .Closing
+                closeWithStatusCode(ProtocolErrorStatusCode, message: nil)
             }
         default:
             break

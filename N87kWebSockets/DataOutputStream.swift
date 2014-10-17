@@ -59,7 +59,13 @@ class DataOutputStream: NSObject {
     
     func close() {
         isClosing = true
-        if queue.isEmpty {
+        switch outputStream.streamStatus {
+        case .Open, .Writing:
+            if !queue.isEmpty {
+                break
+            }
+            fallthrough
+        default:
             outputStream.close()
             delegate?.dataOutputStreamDidClose(self)
         }
