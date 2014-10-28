@@ -189,8 +189,13 @@ public class WebSocket: NSObject {
         case .Open(_, let serializer, _, _):
             if let header = serializer.beginFrameWithOpCode(.Text, isFinal: true, length: UInt64(encodedText.length)) {
                 outputStream.writeData(header)
-                outputStream.writeData(originalRequest == nil ? encodedText : serializer.maskedData(encodedText))
-                return true
+                if originalRequest == nil {
+                    outputStream.writeData(encodedText)
+                    return true
+                } else if let data = serializer.maskedData(encodedText) {
+                    outputStream.writeData(data)
+                    return true
+                }
             }
 
         default:
@@ -204,8 +209,13 @@ public class WebSocket: NSObject {
         case .Open(_, let serializer, _, _):
             if let header = serializer.beginFrameWithOpCode(.Binary, isFinal: true, length: UInt64(data.length)) {
                 outputStream.writeData(header)
-                outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
-                return true
+                if originalRequest == nil {
+                    outputStream.writeData(data)
+                    return true
+                } else if let data = serializer.maskedData(data) {
+                    outputStream.writeData(data)
+                    return true
+                }
             }
 
         default:
@@ -249,7 +259,11 @@ public class WebSocket: NSObject {
 
                 if let header = serializer.beginFrameWithOpCode(.ConnectionClose, isFinal: true, length: UInt64(data.length)) {
                     outputStream.writeData(header)
-                    outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
+                    if originalRequest == nil {
+                        outputStream.writeData(data)
+                    } else if let data = serializer.maskedData(data) {
+                        outputStream.writeData(data)
+                    }
                 }
                 state = .ClosingWithStatusCode(statusCode)
             }

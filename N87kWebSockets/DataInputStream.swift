@@ -26,6 +26,8 @@
 
 import Foundation
 
+private let bufferSize = 8192
+
 protocol DataInputStreamDelegate: NSObjectProtocol {
     func dataInputStream(dataInputStream: DataInputStream, didReadData data: NSData)
     func dataInputStream(dataInputStream: DataInputStream, didCloseWithError error: NSError)
@@ -53,16 +55,18 @@ class DataInputStream: NSObject {
 extension DataInputStream {
 
     private func readData() {
-        let bufferSize = 8192
-        let data = NSMutableData(length: bufferSize)
-        let bytesRead = inputStream.read(UnsafeMutablePointer<UInt8>(data.mutableBytes), maxLength: bufferSize)
-        if bytesRead < 0 {
-            dlog("Error reading from input")
-            delegate?.dataInputStream(self, didCloseWithError: inputStream.streamError!)
-            return
+        if let data = NSMutableData(length: bufferSize) {
+            let bytesRead = inputStream.read(UnsafeMutablePointer<UInt8>(data.mutableBytes), maxLength: bufferSize)
+            if bytesRead < 0 {
+                dlog("Error reading from input")
+                delegate?.dataInputStream(self, didCloseWithError: inputStream.streamError!)
+                return
+            }
+            data.length = bytesRead
+            delegate?.dataInputStream(self, didReadData: data)
+        } else {
+            delegate?.dataInputStream(self, didCloseWithError: NSError(domain: NSPOSIXErrorDomain, code: Int(ENOMEM), userInfo: nil))
         }
-        data.length = bytesRead
-        delegate?.dataInputStream(self, didReadData: data)
     }
 
 }

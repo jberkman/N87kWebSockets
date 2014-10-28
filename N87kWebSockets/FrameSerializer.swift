@@ -47,71 +47,78 @@ class FrameSerializer: NSObject {
     func beginFrameWithOpCode(opCode: OpCode, isFinal: Bool, length: UInt64) -> NSData? {
         switch state {
         case .Header(let masked):
-            let data = NSMutableData(capacity: Const.MaxHeaderLength)
-            data.length = 2
+            if let data = NSMutableData(capacity: Const.MaxHeaderLength) {
+                data.length = 2
 
-            var bytes = UnsafeMutablePointer<UInt8>(data.mutableBytes)
+                var bytes = UnsafeMutablePointer<UInt8>(data.mutableBytes)
 
-            bytes.memory = (isFinal ? HeaderMasks.Fin : 0) | opCode.rawValue
-            bytes += 1
-
-            bytes.memory = masked.masked ? HeaderMasks.Mask : 0
-
-            if length > UInt64(UInt16.max) {
-                bytes.memory |= ExtendedLength.Long
-                data.increaseLengthBy(sizeof(UInt64))
+                bytes.memory = (isFinal ? HeaderMasks.Fin : 0) | opCode.rawValue
                 bytes += 1
-                UnsafeMutablePointer<UInt64>(bytes).memory = length.bigEndian
-                bytes += sizeof(UInt64)
-            } else if length >= UInt64(ExtendedLength.Short) {
-                bytes.memory |= ExtendedLength.Short
-                data.increaseLengthBy(sizeof(UInt16))
-                bytes += 1
-                UnsafeMutablePointer<UInt16>(bytes).memory = UInt16(length).bigEndian
-                bytes += sizeof(UInt16)
-            } else {
-                bytes.memory |= UInt8(length)
-                bytes += 1
-            }
-            if masked.masked {
-                data.increaseLengthBy(sizeof(UInt32))
-                let mask = UnsafeMutableBufferPointer<UInt8>(start: bytes, count: sizeof(UInt32))
-                if SecRandomCopyBytes(kSecRandomDefault, UInt(mask.count), mask.baseAddress) != 0 {
-                    dlog("Could not generate random mask.")
-                    return nil
+
+                bytes.memory = masked.masked ? HeaderMasks.Mask : 0
+
+                if length > UInt64(UInt16.max) {
+                    bytes.memory |= ExtendedLength.Long
+                    data.increaseLengthBy(sizeof(UInt64))
+                    bytes += 1
+                    UnsafeMutablePointer<UInt64>(bytes).memory = length.bigEndian
+                    bytes += sizeof(UInt64)
+                } else if length >= UInt64(ExtendedLength.Short) {
+                    bytes.memory |= ExtendedLength.Short
+                    data.increaseLengthBy(sizeof(UInt16))
+                    bytes += 1
+                    UnsafeMutablePointer<UInt16>(bytes).memory = UInt16(length).bigEndian
+                    bytes += sizeof(UInt16)
+                } else {
+                    bytes.memory |= UInt8(length)
+                    bytes += 1
                 }
-                state = .MaskedData(bytesRemaining: length, mask: [UInt8](mask), maskOffset: 0)
+                if masked.masked {
+                    data.increaseLengthBy(sizeof(UInt32))
+                    let mask = UnsafeMutableBufferPointer<UInt8>(start: bytes, count: sizeof(UInt32))
+                    if SecRandomCopyBytes(kSecRandomDefault, UInt(mask.count), mask.baseAddress) != 0 {
+                        dlog("\(__FUNCTION__): Could not generate random mask.")
+                        return nil
+                    }
+                    state = .MaskedData(bytesRemaining: length, mask: [UInt8](mask), maskOffset: 0)
+                } else {
+                    state = .Header(masked: false)
+                }
+                return data
             } else {
-                state = .Header(masked: false)
+                dlog("\(__FUNCTION__): Could not allocate memory for buffer")
+                return nil
             }
-            return data
-
         default:
             fatalError("Not ready to write header.")
         }
     }
 
-    func maskedData(data: NSData) -> NSData {
+    func maskedData(data: NSData) -> NSData? {
         switch state {
         case .MaskedData(let bytesRemaining, let mask, let maskOffset):
             assert(UInt64(data.length) <= bytesRemaining, "Buffer overflow")
-            let buffer = NSMutableData(capacity: data.length)
-            buffer.length = data.length
+            if let buffer = NSMutableData(capacity: data.length) {
+                buffer.length = data.length
 
-            let src = UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(data.bytes), count: data.length)
-            let dst = UnsafeMutableBufferPointer<UInt8>(start: UnsafeMutablePointer<UInt8>(buffer.mutableBytes), count: buffer.length)
+                let src = UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(data.bytes), count: data.length)
+                let dst = UnsafeMutableBufferPointer<UInt8>(start: UnsafeMutablePointer<UInt8>(buffer.mutableBytes), count: buffer.length)
 
-            let safeMaskOffset = maskOffset - mask.count
-            for i in 0 ..< data.length {
-                dst[i] = src[i] ^ mask[(mask.count + (safeMaskOffset + i) % mask.count) % mask.count]
-            }
+                let safeMaskOffset = maskOffset - mask.count
+                for i in 0 ..< data.length {
+                    dst[i] = src[i] ^ mask[(mask.count + (safeMaskOffset + i) % mask.count) % mask.count]
+                }
 
-            if bytesRemaining == UInt64(data.length) {
-                state = .Header(masked: true)
+                if bytesRemaining == UInt64(data.length) {
+                    state = .Header(masked: true)
+                } else {
+                    state = .MaskedData(bytesRemaining: bytesRemaining - data.length, mask: mask, maskOffset: (mask.count + (safeMaskOffset + buffer.length) % mask.count) % mask.count)
+                }
+                return buffer
             } else {
-                state = .MaskedData(bytesRemaining: bytesRemaining - data.length, mask: mask, maskOffset: (mask.count + (safeMaskOffset + buffer.length) % mask.count) % mask.count)
+                dlog("\(__FUNCTION__): Could not allocate memory for buffer")
+                return nil
             }
-            return buffer
 
         default:
             fatalError("Not masking data")
