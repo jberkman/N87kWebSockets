@@ -60,9 +60,9 @@ public class WebSocket: NSObject {
             switch (oldValue, state) {
             case (.ClientConnecting, .Open):
                 delegate?.webSocketDidOpen(self)
-            case (_, .ClosingWithError), (_, .ClosingWithStatusCode) where outputStream != nil:
+            case (_, .ClosingWithError) where outputStream != nil, (_, .ClosingWithStatusCode) where outputStream != nil:
                 outputStream.close()
-            case (_, .ClosingWithError), (_, .ClosingWithStatusCode) where outputStream == nil:
+            case (_, .ClosingWithError) where outputStream == nil , (_, .ClosingWithStatusCode) where outputStream == nil:
                 state = .Closed
             case (.ClosingWithError(let error), .Closed):
                 delegate?.webSocket(self, didCloseWithError: error)
