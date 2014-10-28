@@ -40,7 +40,7 @@ class ClientHandshake: NSObject {
     private lazy var key: String? = {
         let keyLength = 16
         if let data = NSMutableData(length: keyLength) {
-            if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) != 0 {
+            if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) == 0 {
                 return data.base64EncodedStringWithOptions(nil)
             } else {
                 dlog("\(__FUNCTION__): Could not generate random key")
