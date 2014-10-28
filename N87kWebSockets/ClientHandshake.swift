@@ -39,29 +39,31 @@ class ClientHandshake: NSObject {
     private let responseMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(0)).takeRetainedValue()
     private lazy var key: String? = {
         let keyLength = 16
-        let data = NSMutableData(length: keyLength)
-        if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) != 0 {
-            dlog("Could not generate random key");
-            return nil
+        if let data = NSMutableData(length: keyLength) {
+            if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) != 0 {
+                return data.base64EncodedStringWithOptions(nil)
+            } else {
+                dlog("\(__FUNCTION__): Could not generate random key")
+            }
+        } else {
+            dlog("\(__FUNCTION__): Could not allocate buffer")
         }
-        return data.base64EncodedStringWithOptions(nil)
+        return nil
     }()
     private var expectedAccept: String {
         return "\(key!)\(GUIDs.WebSocket)".N87k_SHA1Digest
     }
 
-    init(request: NSURLRequest) {
+    init?(request: NSURLRequest) {
         self.request = request
         super.init()
-//        if request.URL.host == nil ||
-//            "GET" != request.HTTPMethod ||
-//            scheme == nil {
-//                return nil
-//        }
+        if request.URL.host == nil || "GET" != request.HTTPMethod || scheme == nil {
+            return nil
+        }
     }
 
     private var scheme: Scheme? {
-        return request.URL.scheme != nil ? Scheme.fromRaw(request.URL.scheme!) : nil
+        return request.URL.scheme != nil ? Scheme(rawValue: request.URL.scheme!) : nil
     }
 
     var requestData: NSData? {
@@ -111,10 +113,11 @@ class ClientHandshake: NSObject {
                     headerFields[HTTPHeaderFields.SecWebSocketAccept] as? NSString != expectedAccept ||
                     headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {
                         dlog("\(__FUNCTION__) Invalid HTTP version \(HTTPVersion), status code: \(statusCode), or header fields: \(headerFields)")
-                } else {
-                    let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields)
+                } else if let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields) {
                     let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue() as? AnyObject as? NSData
                     return .Response(response, responseData)
+                } else {
+                    dlog("\(__FUNCTION__): Could not create response")
                 }
             } else {
                 dlog("\(__FUNCTION__): No header fields")

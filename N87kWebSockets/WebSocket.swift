@@ -80,7 +80,7 @@ public class WebSocket: NSObject {
     private var _currentRequest: NSURLRequest? {
         didSet {
             if let requestScheme = _currentRequest?.URL.scheme {
-                scheme = Scheme.fromRaw(requestScheme)
+                scheme = Scheme(rawValue: requestScheme)
             } else {
                 scheme = nil
             }
@@ -113,7 +113,7 @@ public class WebSocket: NSObject {
         originalRequest = request
         _currentRequest = request
         if let scheme = request.URL.scheme {
-            self.scheme = Scheme.fromRaw(scheme)
+            self.scheme = Scheme(rawValue: scheme)
         }
         self.subprotocols = subprotocols
         super.init()
@@ -161,15 +161,15 @@ public class WebSocket: NSObject {
     }
 
     public func connectWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
-        let handshake = ClientHandshake(request: currentRequest!)
-        if let data = handshake.requestData {
-            initializeInputStream(inputStream, outputStream: outputStream)
-                
-            state = .ClientConnecting(handshake)
-            self.outputStream.writeData(data)
-        } else {
-            state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.toRaw(), userInfo: nil))
+        if let handshake = ClientHandshake(request: currentRequest!) {
+            if let data = handshake.requestData {
+                initializeInputStream(inputStream, outputStream: outputStream)
+                state = .ClientConnecting(handshake)
+                self.outputStream.writeData(data)
+                return
+            }
         }
+        state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.rawValue, userInfo: nil))
     }
     
     public func acceptConnectionWithInputStream(inputStream: NSInputStream, outputStream: NSOutputStream) {
@@ -234,24 +234,25 @@ public class WebSocket: NSObject {
     public func closeWithStatusCode(statusCode: UInt16, message: String?) {
         switch state {
         case .Open(_, let serializer, _, _):
-            let data = NSMutableData(capacity: ExtendedLength.Short - 1)
-            var networkStatus = statusCode.bigEndian
-            withUnsafePointer(&networkStatus) { (statusBytes) -> Void in
-                data.appendBytes(UnsafePointer<Void>(statusBytes), length: sizeof(UInt16))
-            }
-            if let message = message?.cStringUsingEncoding(NSUTF8StringEncoding) {
-                if message.count + sizeof(UInt16) < ExtendedLength.Short - 1 {
-                    message.withUnsafeBufferPointer { (message) -> Void in
-                        data.appendBytes(message.baseAddress, length: message.count)
+            if let data = NSMutableData(capacity: ExtendedLength.Short - 1) {
+                var networkStatus = statusCode.bigEndian
+                withUnsafePointer(&networkStatus) { (statusBytes) -> Void in
+                    data.appendBytes(UnsafePointer<Void>(statusBytes), length: sizeof(UInt16))
+                }
+                if let message = message?.cStringUsingEncoding(NSUTF8StringEncoding) {
+                    if message.count + sizeof(UInt16) < ExtendedLength.Short - 1 {
+                        message.withUnsafeBufferPointer { (message) -> Void in
+                            data.appendBytes(message.baseAddress, length: message.count)
+                        }
                     }
                 }
-            }
 
-            if let header = serializer.beginFrameWithOpCode(.ConnectionClose, isFinal: true, length: UInt64(data.length)) {
-                outputStream.writeData(header)
-                outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
+                if let header = serializer.beginFrameWithOpCode(.ConnectionClose, isFinal: true, length: UInt64(data.length)) {
+                    outputStream.writeData(header)
+                    outputStream.writeData(originalRequest == nil ? data : serializer.maskedData(data))
+                }
+                state = .ClosingWithStatusCode(statusCode)
             }
-            state = .ClosingWithStatusCode(statusCode)
             
         default:
             break
@@ -283,7 +284,7 @@ extension WebSocket {
             break
 
         case .Invalid:
-            state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.toRaw(), userInfo: nil))
+            state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.rawValue, userInfo: nil))
 
         case .Response(let response, let data):
             let tokenizer = FrameTokenizer(masked: false)
@@ -301,7 +302,7 @@ extension WebSocket {
             break
             
         case .Invalid:
-            state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.toRaw(), userInfo: nil))
+            state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.rawValue, userInfo: nil))
 
         case .Request(let request, let data):
             if delegate?.webSocket?(self, shouldAcceptConnectionWithRequest: request) ?? true {
@@ -318,7 +319,7 @@ extension WebSocket {
             }
             switch state {
             case .ServerConnecting:
-                state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.toRaw(), userInfo: nil))
+                state = .ClosingWithError(NSError(domain: ErrorDomain, code: Errors.InvalidHandshake.rawValue, userInfo: nil))
             default:
                 break
             }
