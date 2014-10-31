@@ -17,6 +17,10 @@
 		16B2D99819D5419500887D73 /* RingGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B2D99719D5419500887D73 /* RingGenerator.swift */; };
 		16B2D9A019D58E2600887D73 /* ClientHandshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CFFB7719D14C93006650C9 /* ClientHandshake.swift */; };
 		16B2D9A119D58E2E00887D73 /* ServerHandshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B2D99919D555E900887D73 /* ServerHandshake.swift */; };
+		16C572EC1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572EA1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift */; };
+		16C572ED1A0385C000908D00 /* NSURLRequestAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572EB1A0385C000908D00 /* NSURLRequestAdditions.swift */; };
+		16C572EE1A04079E00908D00 /* NSHTTPURLResponseAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572EA1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift */; };
+		16C572EF1A04079E00908D00 /* NSURLRequestAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572EB1A0385C000908D00 /* NSURLRequestAdditions.swift */; };
 		16CFFB7919D28EC6006650C9 /* FrameTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CFFB7519D118A8006650C9 /* FrameTokenizer.swift */; };
 		16E8E86419CF8534005DAB67 /* DataOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86319CF8534005DAB67 /* DataOutputStream.swift */; };
 		16E8E86619CF8CA9005DAB67 /* DataInputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */; };
@@ -47,6 +51,8 @@
 		16AE118119CE2438003E9B4B /* WebSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
 		16B2D99719D5419500887D73 /* RingGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RingGenerator.swift; sourceTree = "<group>"; };
 		16B2D99919D555E900887D73 /* ServerHandshake.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerHandshake.swift; sourceTree = "<group>"; };
+		16C572EA1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSHTTPURLResponseAdditions.swift; sourceTree = "<group>"; };
+		16C572EB1A0385C000908D00 /* NSURLRequestAdditions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSURLRequestAdditions.swift; sourceTree = "<group>"; };
 		16CFFB7519D118A8006650C9 /* FrameTokenizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameTokenizer.swift; sourceTree = "<group>"; };
 		16CFFB7719D14C93006650C9 /* ClientHandshake.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientHandshake.swift; sourceTree = "<group>"; };
 		16E8E86319CF8534005DAB67 /* DataOutputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataOutputStream.swift; sourceTree = "<group>"; };
@@ -94,6 +100,8 @@
 		16AE116819CE1DD3003E9B4B /* N87kWebSockets */ = {
 			isa = PBXGroup;
 			children = (
+				16C572EA1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift */,
+				16C572EB1A0385C000908D00 /* NSURLRequestAdditions.swift */,
 				16066F4F19EF81C100EB5088 /* dlog.swift */,
 				16CFFB7719D14C93006650C9 /* ClientHandshake.swift */,
 				16E8E86519CF8CA9005DAB67 /* DataInputStream.swift */,
@@ -250,10 +258,12 @@
 				16B2D99819D5419500887D73 /* RingGenerator.swift in Sources */,
 				16066F5019EF81C100EB5088 /* dlog.swift in Sources */,
 				16B2D9A119D58E2E00887D73 /* ServerHandshake.swift in Sources */,
+				16C572EC1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift in Sources */,
 				16E8E86419CF8534005DAB67 /* DataOutputStream.swift in Sources */,
 				16AE118219CE2438003E9B4B /* WebSocket.swift in Sources */,
 				160C637019D31C3B000E56FC /* WebSockets.swift in Sources */,
 				162E6FA219D10C4B00E384D1 /* NSString+N87kWebSockets.m in Sources */,
+				16C572ED1A0385C000908D00 /* NSURLRequestAdditions.swift in Sources */,
 				16B2D9A019D58E2600887D73 /* ClientHandshake.swift in Sources */,
 				160C637219D31EBB000E56FC /* FrameSerializer.swift in Sources */,
 				16CFFB7919D28EC6006650C9 /* FrameTokenizer.swift in Sources */,
@@ -265,6 +275,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				16F533A919E47C0500CCF79C /* ClientHandshake.swift in Sources */,
+				16C572EF1A04079E00908D00 /* NSURLRequestAdditions.swift in Sources */,
 				16F533B319E5203100CCF79C /* WebSockets.swift in Sources */,
 				16F533B119E47CA500CCF79C /* NSString+N87kWebSockets.m in Sources */,
 				16F533AB19E47C8000CCF79C /* DataInputStream.swift in Sources */,
@@ -274,6 +285,7 @@
 				16F533AA19E47C6A00CCF79C /* WebSocket.swift in Sources */,
 				16F533A819E4788000CCF79C /* ClientHandshakeTests.swift in Sources */,
 				16F533AE19E47C8000CCF79C /* FrameTokenizer.swift in Sources */,
+				16C572EE1A04079E00908D00 /* NSHTTPURLResponseAdditions.swift in Sources */,
 				16F533AD19E47C8000CCF79C /* FrameSerializer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

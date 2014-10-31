@@ -32,7 +32,7 @@ class ServerHandshake: NSObject {
     enum Result {
         case Incomplete
         case Invalid
-        case Request(NSURLRequest, NSData?)
+        case Request(NSURLRequest)
     }
     
     private let requestMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(1)).takeRetainedValue()
@@ -40,20 +40,14 @@ class ServerHandshake: NSObject {
     private var expectedAccept: String {
         return "\(key!)\(GUIDs.WebSocket)".N87k_SHA1Digest
     }
+    private var URL: NSURL?
 
-    var responseData: NSData? {
-        let statusCode = HTTPStatusCodes.Upgrade
-        let responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NSHTTPURLResponse.localizedStringForStatusCode(statusCode) as NSString, HTTPVersions.HTTP1_1).takeRetainedValue()
-        let headers: [NSString: NSString] = [
+    var upgradeResponse: NSHTTPURLResponse? {
+        return NSHTTPURLResponse(URL: URL!, statusCode: HTTPStatusCodes.Upgrade, HTTPVersion: kCFHTTPVersion1_1, headerFields: [
             HTTPHeaderFields.Connection: HTTPHeaderValues.Upgrade,
             HTTPHeaderFields.Upgrade: HTTPHeaderValues.WebSocket,
-            HTTPHeaderFields.SecWebSocketVersion: HTTPHeaderValues.Version,
             HTTPHeaderFields.SecWebSocketAccept: expectedAccept
-        ]
-        for (headerField, value) in headers {
-            CFHTTPMessageSetHeaderFieldValue(responseMessage, headerField, value)
-        }
-        return CFHTTPMessageCopySerializedMessage(responseMessage).takeRetainedValue()
+        ])
     }
     
     func readData(data: NSData) -> Result {
@@ -61,26 +55,17 @@ class ServerHandshake: NSObject {
         if CFHTTPMessageIsHeaderComplete(requestMessage) == Boolean(0) {
             return .Incomplete
         }
-        
-        var response: NSHTTPURLResponse?
-        var responseData: NSData?
-        if HTTPVersions.HTTP1_1 != CFHTTPMessageCopyVersion(requestMessage)?.takeRetainedValue() ||
-            "GET" as NSString != CFHTTPMessageCopyRequestMethod(requestMessage)?.takeRetainedValue() {
-        } else if let headerFields: NSDictionary = CFHTTPMessageCopyAllHeaderFields(requestMessage)?.takeRetainedValue() {
-            if headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade.lowercaseString ||
-                headerFields[HTTPHeaderFields.Upgrade]?.lowercaseString != HTTPHeaderValues.WebSocket.lowercaseString ||
-                headerFields[HTTPHeaderFields.SecWebSocketVersion]?.lowercaseString != HTTPHeaderValues.Version ||
-                headerFields[HTTPHeaderFields.SecWebSocketKey] == nil ||
-                headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {
-            } else if let URL: NSURL = CFHTTPMessageCopyRequestURL(requestMessage)?.takeRetainedValue() {
-                let request = NSMutableURLRequest(URL: URL)
-                request.HTTPMethod = "GET"
-                for (k, v) in headerFields {
-                    request.setValue(v as NSString, forHTTPHeaderField: k as NSString)
-                }
-                key = headerFields[HTTPHeaderFields.SecWebSocketKey] as? NSString
-                let requestData = CFHTTPMessageCopyBody(requestMessage)?.takeRetainedValue() as? AnyObject as? NSData
-                return .Request(request, requestData)
+
+        if let request = NSMutableURLRequest(N87k_HTTPMessage: requestMessage) {
+            URL = request.URL
+            if !request.N87k_webSocketRequest {
+                return .Request(request)
+            }
+            let version = request.valueForHTTPHeaderField(HTTPHeaderFields.SecWebSocketVersion)
+            key = request.valueForHTTPHeaderField(HTTPHeaderFields.SecWebSocketKey)
+            let extensions = request.valueForHTTPHeaderField(HTTPHeaderFields.SecWebSocketExtensions)
+            if version == HTTPHeaderValues.Version && key != nil && extensions == nil {
+                return .Request(request)
             }
         }
         return .Invalid

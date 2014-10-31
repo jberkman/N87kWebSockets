@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1642CAE31A0082D2009C87B2 /* dlog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1642CAE21A0082D2009C87B2 /* dlog.swift */; };
+		16C572E71A0370F700908D00 /* NSURLRequestAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572E61A0370F700908D00 /* NSURLRequestAdditions.swift */; };
+		16C572E91A03789C00908D00 /* NSHTTPURLResponseAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572E81A03789C00908D00 /* NSHTTPURLResponseAdditions.swift */; };
 		16F5330919E1C8A400CCF79C /* N87kWebSockets.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16F532FD19E1C8A400CCF79C /* N87kWebSockets.framework */; };
 		16F533C819E529CB00CCF79C /* ClientHandshakeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F533C419E529CA00CCF79C /* ClientHandshakeTests.swift */; };
 		16F533D719E52B0E00CCF79C /* ClientHandshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F533CB19E52B0E00CCF79C /* ClientHandshake.swift */; };
@@ -44,6 +47,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1642CAE21A0082D2009C87B2 /* dlog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = dlog.swift; sourceTree = "<group>"; };
+		16C572E61A0370F700908D00 /* NSURLRequestAdditions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSURLRequestAdditions.swift; sourceTree = "<group>"; };
+		16C572E81A03789C00908D00 /* NSHTTPURLResponseAdditions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSHTTPURLResponseAdditions.swift; sourceTree = "<group>"; };
 		16F532FD19E1C8A400CCF79C /* N87kWebSockets.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = N87kWebSockets.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		16F5330119E1C8A400CCF79C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16F5330819E1C8A400CCF79C /* N87kWebSocketsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = N87kWebSocketsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -104,6 +110,9 @@
 		16F532FF19E1C8A400CCF79C /* N87kWebSockets */ = {
 			isa = PBXGroup;
 			children = (
+				16C572E81A03789C00908D00 /* NSHTTPURLResponseAdditions.swift */,
+				16C572E61A0370F700908D00 /* NSURLRequestAdditions.swift */,
+				1642CAE21A0082D2009C87B2 /* dlog.swift */,
 				16F533CB19E52B0E00CCF79C /* ClientHandshake.swift */,
 				16F533CC19E52B0E00CCF79C /* DataInputStream.swift */,
 				16F533CD19E52B0E00CCF79C /* DataOutputStream.swift */,
@@ -259,13 +268,16 @@
 			files = (
 				16F533D919E52B0E00CCF79C /* DataInputStream.swift in Sources */,
 				16F533DD19E52B0E00CCF79C /* FrameSerializer.swift in Sources */,
+				1642CAE31A0082D2009C87B2 /* dlog.swift in Sources */,
 				16F533D719E52B0E00CCF79C /* ClientHandshake.swift in Sources */,
 				16F533DB19E52B0E00CCF79C /* DataOutputStream.swift in Sources */,
+				16C572E71A0370F700908D00 /* NSURLRequestAdditions.swift in Sources */,
 				16F533DF19E52B0E00CCF79C /* FrameTokenizer.swift in Sources */,
 				16F533EB19E52B0E00CCF79C /* WebSockets.swift in Sources */,
 				16F533E519E52B0E00CCF79C /* RingGenerator.swift in Sources */,
 				16F533E719E52B0E00CCF79C /* ServerHandshake.swift in Sources */,
 				16F533E919E52B0E00CCF79C /* WebSocket.swift in Sources */,
+				16C572E91A03789C00908D00 /* NSHTTPURLResponseAdditions.swift in Sources */,
 				16F533E319E52B0E00CCF79C /* NSString+N87kWebSockets.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -392,6 +404,7 @@
 				INFOPLIST_FILE = N87kWebSocketsX/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				OTHER_SWIFT_FLAGS = "-DDEBUG";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};

@@ -55,45 +55,28 @@ class ClientHandshake: NSObject {
     }
 
     init?(request: NSURLRequest) {
-        self.request = request
+        let tmpRequest = NSMutableURLRequest(URL: request.URL)
+        self.request = tmpRequest
         super.init()
-        if request.URL.host == nil || "GET" != request.HTTPMethod || scheme == nil {
+        if request.URL.host == nil || "GET" != request.HTTPMethod || scheme == nil || key == nil {
             return nil
         }
+        if let port = request.URL.port {
+            tmpRequest.setValue("\(request.URL.host!):\(port)", forHTTPHeaderField: HTTPHeaderFields.Host)
+        } else {
+            tmpRequest.setValue(request.URL.host, forHTTPHeaderField: HTTPHeaderFields.Host)
+        }
+        tmpRequest.setValue(HTTPHeaderValues.Upgrade, forHTTPHeaderField: HTTPHeaderFields.Connection)
+        tmpRequest.setValue(HTTPHeaderValues.WebSocket, forHTTPHeaderField: HTTPHeaderFields.Upgrade)
+        tmpRequest.setValue(HTTPHeaderValues.Version, forHTTPHeaderField: HTTPHeaderFields.SecWebSocketVersion)
+        tmpRequest.setValue(key, forHTTPHeaderField: HTTPHeaderFields.SecWebSocketKey)
     }
 
     private var scheme: Scheme? {
-        return request.URL.scheme != nil ? Scheme(rawValue: request.URL.scheme!) : nil
-    }
-
-    var requestData: NSData? {
-        if key == nil {
-            return nil
+        if let scheme = request.URL.scheme {
+            return Scheme(rawValue: scheme)
         }
-
-        let port = request.URL.port != nil && request.URL.port != scheme!.defaultPort ? ":\(request.URL.port!)" : ""
-
-        let requestMessage = CFHTTPMessageCreateRequest(kCFAllocatorDefault, request.HTTPMethod! as NSString, request.URL, HTTPVersions.HTTP1_1).takeRetainedValue()
-        let headers: [NSString: NSString] = [
-            HTTPHeaderFields.Host: "\(request.URL.host!)\(port)",
-            HTTPHeaderFields.Connection: HTTPHeaderValues.Upgrade,
-            HTTPHeaderFields.Upgrade: HTTPHeaderValues.WebSocket,
-            HTTPHeaderFields.SecWebSocketVersion: HTTPHeaderValues.Version,
-            HTTPHeaderFields.SecWebSocketKey: key!
-        ]
-        if let requestHeaders = request.allHTTPHeaderFields as? [NSString: NSString] {
-            for (k, v) in requestHeaders {
-                if headers[k] == nil {
-                    CFHTTPMessageSetHeaderFieldValue(requestMessage, k, v)
-                }
-            }
-
-        }
-        for (k, v) in headers {
-            CFHTTPMessageSetHeaderFieldValue(requestMessage, k, v)
-        }
-
-        return CFHTTPMessageCopySerializedMessage(requestMessage)?.takeRetainedValue()
+        return nil
     }
 
     func readData(data: NSData) -> Result {
@@ -102,28 +85,23 @@ class ClientHandshake: NSObject {
             return .Incomplete
         }
 
-        var response: NSHTTPURLResponse?
-        var responseData: NSData?
-        if let HTTPVersion: NSString = CFHTTPMessageCopyVersion(responseMessage)?.takeRetainedValue() {
-            let statusCode = CFHTTPMessageGetResponseStatusCode(responseMessage)
-            if let headerFields: NSDictionary = CFHTTPMessageCopyAllHeaderFields(responseMessage)?.takeRetainedValue() {
-                if HTTPVersion != HTTPVersions.HTTP1_1 || statusCode != HTTPStatusCodes.Upgrade ||
-                    headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade.lowercaseString ||
+        if let response = NSHTTPURLResponse(N87k_URL: request.URL, HTTPMessage: responseMessage) {
+            if response.statusCode == HTTPStatusCodes.Upgrade {
+                let headerFields = response.allHeaderFields
+                if  headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade.lowercaseString ||
                     headerFields[HTTPHeaderFields.Upgrade]?.lowercaseString != HTTPHeaderValues.WebSocket.lowercaseString ||
                     headerFields[HTTPHeaderFields.SecWebSocketAccept] as? NSString != expectedAccept ||
                     headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {
-                        dlog("\(__FUNCTION__) Invalid HTTP version \(HTTPVersion), status code: \(statusCode), or header fields: \(headerFields)")
-                } else if let response = NSHTTPURLResponse(URL: request.URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields) {
+                        dlog("\(__FUNCTION__) Invalid status code: \(response.statusCode) or header fields: \(headerFields)")
+                } else {
                     let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue() as? AnyObject as? NSData
                     return .Response(response, responseData)
-                } else {
-                    dlog("\(__FUNCTION__): Could not create response")
                 }
             } else {
-                dlog("\(__FUNCTION__): No header fields")
+                dlog("\(__FUNCTION__): Invalid status code: \(response.statusCode)")
             }
         } else {
-            dlog("\(__FUNCTION__): No HTTP Version")
+            dlog("\(__FUNCTION__): Invalid response")
         }
         return .Invalid
     }

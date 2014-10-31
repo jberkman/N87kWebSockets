@@ -79,16 +79,17 @@ public enum Errors: Int {
     case InvalidOpCode = 1, InvalidReservedBit, InvalidLength, InvalidMask, InvalidHandshake
 }
 
-struct HTTPVersions {
-    static let HTTP1_1: NSString = "HTTP/1.1"
-}
-
 struct GUIDs {
     static let WebSocket = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 }
 
 struct HTTPStatusCodes {
     static let Upgrade = 101
+
+    static let MovedPermanently = 301
+
+    static let NotFound = 404
+    static let InternalServerError = 500
 }
 
 struct HTTPHeaderFields {
