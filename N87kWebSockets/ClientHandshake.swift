@@ -34,6 +34,23 @@ class ClientHandshake: NSObject {
         case Invalid
         case Response(NSHTTPURLResponse, NSData?)
     }
+    private enum WhitespaceState {
+        case None
+        case NewLine1
+        case CarriageReturn1
+        case NewLine2
+        case CarriageReturn2
+        func stateWithByte(byte: Byte) -> WhitespaceState {
+            switch (self, byte) {
+            case (.NewLine2, 0xa): return .CarriageReturn2
+            case (.CarriageReturn1, 0xd): return .NewLine2
+            case (.NewLine1, 0xa): return .CarriageReturn1
+            case (_, 0xd): return .NewLine1
+            default: return .None
+            }
+        }
+    }
+    private var whitespaceState = WhitespaceState.None
 
     let request: NSURLRequest
     private let responseMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(0)).takeRetainedValue()
@@ -80,6 +97,16 @@ class ClientHandshake: NSObject {
     }
 
     func readData(data: NSData) -> Result {
+        var responseData: NSData?
+        let end = data.bytes + data.length
+        for var byte = data.bytes; byte < end; byte++ {
+            whitespaceState = whitespaceState.stateWithByte(UnsafePointer<Byte>(byte).memory)
+            if whitespaceState == .CarriageReturn2 {
+                responseData = NSData(bytes: byte + 1, length: end - byte - 1)
+                break
+
+            }
+        }
         CFHTTPMessageAppendBytes(responseMessage, UnsafePointer<UInt8>(data.bytes), data.length)
         if CFHTTPMessageIsHeaderComplete(responseMessage) == Boolean(0) {
             return .Incomplete
@@ -94,7 +121,6 @@ class ClientHandshake: NSObject {
                     headerFields[HTTPHeaderFields.SecWebSocketExtensions] != nil {
                         dlog("\(__FUNCTION__) Invalid status code: \(response.statusCode) or header fields: \(headerFields)")
                 } else {
-                    let responseData = CFHTTPMessageCopyBody(responseMessage)?.takeRetainedValue() as? AnyObject as? NSData
                     return .Response(response, responseData)
                 }
             } else {
