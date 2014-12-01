@@ -71,11 +71,11 @@ class ClientHandshakeTests: XCTestCase {
         let handshake = ClientHandshake(request: request)
         XCTAssertNotNil(handshake)
 
-        let data = handshake?.requestData
+        let data = handshake?.request.N87k_serializedData
         XCTAssertNotNil(data)
         
         if let data = data {
-            dlog("%@", NSString(data: data, encoding: NSUTF8StringEncoding)!)
+            dlog("\(NSString(data: data, encoding: NSUTF8StringEncoding)!))")
             let request = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, Boolean(1)).takeRetainedValue()
             CFHTTPMessageAppendBytes(request, UnsafePointer<UInt8>(data.bytes), data.length)
             XCTAssertEqual(CFHTTPMessageIsHeaderComplete(request), Boolean(1))

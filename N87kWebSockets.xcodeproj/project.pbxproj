@@ -17,6 +17,7 @@
 		16B2D99819D5419500887D73 /* RingGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B2D99719D5419500887D73 /* RingGenerator.swift */; };
 		16B2D9A019D58E2600887D73 /* ClientHandshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CFFB7719D14C93006650C9 /* ClientHandshake.swift */; };
 		16B2D9A119D58E2E00887D73 /* ServerHandshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B2D99919D555E900887D73 /* ServerHandshake.swift */; };
+		16BA9F6C1A2BF3C600BB6435 /* dlog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16066F4F19EF81C100EB5088 /* dlog.swift */; };
 		16C572EC1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572EA1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift */; };
 		16C572ED1A0385C000908D00 /* NSURLRequestAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572EB1A0385C000908D00 /* NSURLRequestAdditions.swift */; };
 		16C572EE1A04079E00908D00 /* NSHTTPURLResponseAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C572EA1A0385C000908D00 /* NSHTTPURLResponseAdditions.swift */; };
@@ -285,6 +286,7 @@
 				16F533AA19E47C6A00CCF79C /* WebSocket.swift in Sources */,
 				16F533A819E4788000CCF79C /* ClientHandshakeTests.swift in Sources */,
 				16F533AE19E47C8000CCF79C /* FrameTokenizer.swift in Sources */,
+				16BA9F6C1A2BF3C600BB6435 /* dlog.swift in Sources */,
 				16C572EE1A04079E00908D00 /* NSHTTPURLResponseAdditions.swift in Sources */,
 				16F533AD19E47C8000CCF79C /* FrameSerializer.swift in Sources */,
 			);
