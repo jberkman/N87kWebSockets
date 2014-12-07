@@ -389,6 +389,7 @@ extension WebSocket {
 extension WebSocket: DataInputStreamDelegate {
 
     func dataInputStream(dataInputStream: DataInputStream, didReadData data: NSData) {
+//        dlog("\(__FUNCTION__) \(data.length)")
         switch state {
         case .ClientConnecting(let handshake):
             handleClientHandshake(handshake.readData(data))
@@ -451,7 +452,7 @@ extension WebSocket: DataOutputStreamDelegate {
 extension WebSocket: FrameTokenizerDelegate {
 
     func frameTokenizer(frameTokenizer: FrameTokenizer, didBeginFrameWithOpCode opCode: OpCode, isFinal: Bool, reservedBits: (Bit, Bit, Bit)) {
-//        dlog("Got frame with opCode: %@", "\(opCode.rawValue)")
+//        dlog("\(__FUNCTION__) \(opCode.rawValue) \(isFinal)")
         var isBinary = false
         switch state {
         case .Open(let tokenizer, let serializer, _, _):
@@ -477,7 +478,7 @@ extension WebSocket: FrameTokenizerDelegate {
     }
 
     func frameTokenizer(frameTokenizer: FrameTokenizer, didReadFrameLength frameLength: UInt64) {
-//        dlog("%@ %@", __FUNCTION__, "\(frameLength)")
+//        dlog("\(__FUNCTION__) \(frameLength)")
         switch state {
         case .Open(_, let serializer, .Some(.Ping), _):
             if let data = serializer.beginFrameWithOpCode(.Pong, isFinal: true, length: frameLength) {
@@ -491,7 +492,7 @@ extension WebSocket: FrameTokenizerDelegate {
     }
 
     func frameTokenizer(frameTokenizer: FrameTokenizer, didReadData data: NSData) {
-//        dlog("%@ %@", __FUNCTION__, data)
+//        dlog("\(__FUNCTION__) \(data.length)")
         switch state {
         case .Open(_, _, .Some(let opCode), _):
             switch opCode {
@@ -508,7 +509,7 @@ extension WebSocket: FrameTokenizerDelegate {
     }
 
     func frameTokenizerDidEndFrame(frameTokenizer: FrameTokenizer) {
-//        dlog("%@", __FUNCTION__)
+//        dlog("\(__FUNCTION__)")
         switch state {
         case .Open(let tokenizer, let serializer, .Some(let opCode), .Some(let isFinal)):
             switch opCode {

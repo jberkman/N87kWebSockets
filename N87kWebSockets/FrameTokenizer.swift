@@ -113,7 +113,7 @@ class FrameTokenizer: NSObject {
                         state = .Error
                         return NSError(domain: ErrorDomain, code: Errors.InvalidReservedBit.rawValue, userInfo: nil)
                     }
-//                    dlog("OpCode: %@", "\(byte)")
+//                    dlog("OpCode: \(byte)")
                     delegate?.frameTokenizer(self, didBeginFrameWithOpCode: opCode, isFinal: byte & HeaderMasks.Fin == HeaderMasks.Fin, reservedBits: (.Zero, .Zero, .Zero))
                     state = .Length(isControl: opCode.isControl)
                 } else {
