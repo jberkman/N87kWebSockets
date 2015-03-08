@@ -28,6 +28,6 @@ import Foundation
 
 func dlog<T>(msg: @autoclosure () -> T) {
     #if DEBUG
-        NSLog("N87kWebSockets: %@", "\(msg())")
+        NSLog("N87kWebSockets: %@", toString(msg()))
     #endif
 }
