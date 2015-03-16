@@ -78,7 +78,7 @@ class FrameTokenizer: NSObject {
         super.init()
     }
 
-    var delegate: FrameTokenizerDelegate?
+    weak var delegate: FrameTokenizerDelegate?
     
     private func appendMaskedByte(byte: UInt8) {
         switch state {
