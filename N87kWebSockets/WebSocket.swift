@@ -133,8 +133,8 @@ public class WebSocket: NSObject {
     }
     
     deinit {
-        inputStream = nil
-        outputStream = nil
+        inputStream?.delegate = nil
+        outputStream?.delegate = nil
     }
     
     public func scheduleInRunLoop(runLoop: NSRunLoop, forMode mode: String) {
