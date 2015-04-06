@@ -110,22 +110,22 @@
 		16F532FF19E1C8A400CCF79C /* N87kWebSockets */ = {
 			isa = PBXGroup;
 			children = (
-				16C572E81A03789C00908D00 /* NSHTTPURLResponseAdditions.swift */,
-				16C572E61A0370F700908D00 /* NSURLRequestAdditions.swift */,
-				1642CAE21A0082D2009C87B2 /* dlog.swift */,
 				16F533CB19E52B0E00CCF79C /* ClientHandshake.swift */,
 				16F533CC19E52B0E00CCF79C /* DataInputStream.swift */,
 				16F533CD19E52B0E00CCF79C /* DataOutputStream.swift */,
+				1642CAE21A0082D2009C87B2 /* dlog.swift */,
 				16F533CE19E52B0E00CCF79C /* FrameSerializer.swift */,
 				16F533CF19E52B0E00CCF79C /* FrameTokenizer.swift */,
 				16F533D019E52B0E00CCF79C /* N87kWebSockets.h */,
+				16C572E81A03789C00908D00 /* NSHTTPURLResponseAdditions.swift */,
 				16F533D119E52B0E00CCF79C /* NSString+N87kWebSockets.h */,
 				16F533D219E52B0E00CCF79C /* NSString+N87kWebSockets.m */,
+				16C572E61A0370F700908D00 /* NSURLRequestAdditions.swift */,
 				16F533D319E52B0E00CCF79C /* RingGenerator.swift */,
 				16F533D419E52B0E00CCF79C /* ServerHandshake.swift */,
+				16F5330019E1C8A400CCF79C /* Supporting Files */,
 				16F533D519E52B0E00CCF79C /* WebSocket.swift */,
 				16F533D619E52B0E00CCF79C /* WebSockets.swift */,
-				16F5330019E1C8A400CCF79C /* Supporting Files */,
 			);
 			path = N87kWebSockets;
 			sourceTree = "<group>";
