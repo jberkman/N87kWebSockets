@@ -129,6 +129,7 @@ public class WebSocket: NSObject {
     public init(scheme: Scheme, subprotocols: [String] = []) {
         self.scheme = scheme
         self.subprotocols = subprotocols
+        originalRequest = nil
         super.init()
     }
     
@@ -153,7 +154,7 @@ public class WebSocket: NSObject {
             let port = currentRequest!.URL?.port?.integerValue ?? scheme!.defaultPort
             var inputStream: NSInputStream?
             var outputStream: NSOutputStream?
-            NSStream.getStreamsToHostWithName(currentRequest!.URL.host!, port: port, inputStream: &inputStream, outputStream: &outputStream)
+            NSStream.getStreamsToHostWithName(currentRequest!.URL!.host!, port: port, inputStream: &inputStream, outputStream: &outputStream)
             if inputStream == nil || outputStream == nil {
                 delegate?.webSocket(self, didCloseWithError: NSError(domain: NSURLErrorDomain, code: NSURLErrorCannotConnectToHost, userInfo: nil))
                 return
@@ -213,7 +214,7 @@ public class WebSocket: NSObject {
                             delegate?.webSocket?(self, didReadHTTPData: data)
                         }
                     }
-                } else if let response = NSHTTPURLResponse(URL: request.URL!, statusCode: HTTPStatusCodes.InternalServerError, HTTPVersion: kCFHTTPVersion1_1, headerFields: nil) {
+                } else if let response = NSHTTPURLResponse(URL: request.URL!, statusCode: HTTPStatusCodes.InternalServerError, HTTPVersion: kCFHTTPVersion1_1 as String, headerFields: nil) {
                     if let data = response.N87k_serializedData {
                         outputStream.writeData(data)
                     }
@@ -297,13 +298,13 @@ public class WebSocket: NSObject {
     public func closeWithStatusCode(statusCode: UInt16, message: String? = nil) {
         switch state {
         case .Open(_, let serializer, _, _):
-            if let data = NSMutableData(capacity: ExtendedLength.Short - 1) {
+            if let data = NSMutableData(capacity: Int(ExtendedLength.Short) - 1) {
                 var networkStatus = statusCode.bigEndian
                 withUnsafePointer(&networkStatus) { (statusBytes) -> Void in
                     data.appendBytes(UnsafePointer<Void>(statusBytes), length: sizeof(UInt16))
                 }
                 if let message = message?.cStringUsingEncoding(NSUTF8StringEncoding) {
-                    if message.count + sizeof(UInt16) < ExtendedLength.Short - 1 {
+                    if message.count + sizeof(UInt16) < Int(ExtendedLength.Short) - 1 {
                         message.withUnsafeBufferPointer { (message) -> Void in
                             data.appendBytes(message.baseAddress, length: message.count)
                         }

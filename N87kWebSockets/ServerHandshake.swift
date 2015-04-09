@@ -43,7 +43,7 @@ class ServerHandshake: NSObject {
     private var URL: NSURL?
 
     var upgradeResponse: NSHTTPURLResponse? {
-        return NSHTTPURLResponse(URL: URL!, statusCode: HTTPStatusCodes.Upgrade, HTTPVersion: kCFHTTPVersion1_1, headerFields: [
+        return NSHTTPURLResponse(URL: URL!, statusCode: HTTPStatusCodes.Upgrade, HTTPVersion: kCFHTTPVersion1_1 as String, headerFields: [
             HTTPHeaderFields.Connection: HTTPHeaderValues.Upgrade,
             HTTPHeaderFields.Upgrade: HTTPHeaderValues.WebSocket,
             HTTPHeaderFields.SecWebSocketAccept: expectedAccept

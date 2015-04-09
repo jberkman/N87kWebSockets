@@ -57,7 +57,7 @@ class ClientHandshake: NSObject {
     private lazy var key: String? = {
         let keyLength = 16
         if let data = NSMutableData(length: keyLength) {
-            if SecRandomCopyBytes(kSecRandomDefault, UInt(keyLength), UnsafeMutablePointer<UInt8>(data.mutableBytes)) == 0 {
+            if SecRandomCopyBytes(kSecRandomDefault, keyLength, UnsafeMutablePointer<UInt8>(data.mutableBytes)) == 0 {
                 return data.base64EncodedStringWithOptions(nil)
             } else {
                 dlog("\(__FUNCTION__): Could not generate random key")
@@ -78,10 +78,10 @@ class ClientHandshake: NSObject {
         if request.URL!.host == nil || "GET" != request.HTTPMethod || scheme == nil || key == nil {
             return nil
         }
-        if let port = request.URL!.port {
-            tmpRequest.setValue("\(request.URL.host!):\(port)", forHTTPHeaderField: HTTPHeaderFields.Host)
-        } else {
-            tmpRequest.setValue(request.URL.host, forHTTPHeaderField: HTTPHeaderFields.Host)
+        if let port = request.URL?.port {
+            tmpRequest.setValue("\(request.URL!.host!):\(port)", forHTTPHeaderField: HTTPHeaderFields.Host)
+        } else if let host = request.URL?.host {
+            tmpRequest.setValue(host, forHTTPHeaderField: HTTPHeaderFields.Host)
         }
         tmpRequest.setValue(HTTPHeaderValues.Upgrade, forHTTPHeaderField: HTTPHeaderFields.Connection)
         tmpRequest.setValue(HTTPHeaderValues.WebSocket, forHTTPHeaderField: HTTPHeaderFields.Upgrade)

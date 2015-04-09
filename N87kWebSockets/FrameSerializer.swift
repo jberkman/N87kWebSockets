@@ -55,7 +55,7 @@ class FrameSerializer: NSObject {
                 bytes.memory = (isFinal ? HeaderMasks.Fin : 0) | opCode.rawValue
                 bytes += 1
 
-                bytes.memory = masked.masked ? HeaderMasks.Mask : 0
+                bytes.memory = masked ? HeaderMasks.Mask : 0
 
                 if length > UInt64(UInt16.max) {
                     bytes.memory |= ExtendedLength.Long
@@ -73,10 +73,10 @@ class FrameSerializer: NSObject {
                     bytes.memory |= UInt8(length)
                     bytes += 1
                 }
-                if masked.masked {
+                if masked {
                     data.increaseLengthBy(sizeof(UInt32))
                     let mask = UnsafeMutableBufferPointer<UInt8>(start: bytes, count: sizeof(UInt32))
-                    if SecRandomCopyBytes(kSecRandomDefault, UInt(mask.count), mask.baseAddress) != 0 {
+                    if SecRandomCopyBytes(kSecRandomDefault, mask.count, mask.baseAddress) != 0 {
                         dlog("\(__FUNCTION__): Could not generate random mask.")
                         return nil
                     }
@@ -112,7 +112,7 @@ class FrameSerializer: NSObject {
                 if bytesRemaining == UInt64(data.length) {
                     state = .Header(masked: true)
                 } else {
-                    state = .MaskedData(bytesRemaining: bytesRemaining - data.length, mask: mask, maskOffset: (mask.count + (safeMaskOffset + buffer.length) % mask.count) % mask.count)
+                    state = .MaskedData(bytesRemaining: bytesRemaining - UInt64(data.length), mask: mask, maskOffset: (mask.count + (safeMaskOffset + buffer.length) % mask.count) % mask.count)
                 }
                 return buffer
             } else {

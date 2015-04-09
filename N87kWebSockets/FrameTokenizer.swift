@@ -128,9 +128,9 @@ class FrameTokenizer: NSObject {
                 }
 //                dlog("Length: %@", "\(byte)")
                 switch (byte & HeaderMasks.PayloadLen, masked) {
-                case (ExtendedLength.Short, _) where !isControl.isControl:
+                case (ExtendedLength.Short, _) where !isControl:
                     state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt16) - sizeof(UInt8))
-                case (ExtendedLength.Long, _) where !isControl.isControl:
+                case (ExtendedLength.Long, _) where !isControl:
                     state = .ExtendedLength(length: 0, shiftOffset: sizeof(UInt64) - sizeof(UInt8))
                 case (let payloadLen, true):
 //                    dlog("got length: %@", "\(payloadLen)")

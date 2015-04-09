@@ -30,11 +30,11 @@ import Foundation
 extension NSMutableURLRequest {
 
     convenience init?(N87k_HTTPMessage HTTPMessage: CFHTTPMessage) {
-        if (CFHTTPMessageCopyVersion(HTTPMessage)?.takeRetainedValue() as? String)! == kCFHTTPVersion1_1 {
+        if (CFHTTPMessageCopyVersion(HTTPMessage)?.takeRetainedValue() as? String) == kCFHTTPVersion1_1 as String {
             if let URL: NSURL = CFHTTPMessageCopyRequestURL(HTTPMessage)?.takeRetainedValue() {
                 self.init(URL: URL)
-                HTTPMethod = CFHTTPMessageCopyRequestMethod(HTTPMessage)?.takeRetainedValue() ?? "GET"
-                allHTTPHeaderFields = CFHTTPMessageCopyAllHeaderFields(HTTPMessage)?.takeRetainedValue()
+                HTTPMethod = CFHTTPMessageCopyRequestMethod(HTTPMessage)?.takeRetainedValue() as? String ?? "GET"
+                allHTTPHeaderFields = CFHTTPMessageCopyAllHeaderFields(HTTPMessage)?.takeRetainedValue() as? [NSObject: AnyObject]
                 HTTPBody = CFHTTPMessageCopyBody(HTTPMessage)?.takeRetainedValue()
                 return
             }
