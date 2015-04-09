@@ -30,12 +30,11 @@ import Foundation
 extension NSHTTPURLResponse {
 
     convenience init?(N87k_URL URL: NSURL, HTTPMessage: CFHTTPMessage) {
-        if let HTTPVersion: NSString = CFHTTPMessageCopyVersion(HTTPMessage)?.takeRetainedValue() {
-            if let headerFields: NSDictionary = CFHTTPMessageCopyAllHeaderFields(HTTPMessage)?.takeRetainedValue() {
+        if let HTTPVersion: NSString = CFHTTPMessageCopyVersion(HTTPMessage)?.takeRetainedValue(),
+            headerFields: NSDictionary = CFHTTPMessageCopyAllHeaderFields(HTTPMessage)?.takeRetainedValue() {
                 let statusCode = CFHTTPMessageGetResponseStatusCode(HTTPMessage)
                 self.init(URL: URL, statusCode: statusCode, HTTPVersion: HTTPVersion as String, headerFields: headerFields as [NSObject : AnyObject])
                 return
-            }
         }
         self.init(URL: NSURL(string: "http://invalid")!, statusCode: 500, HTTPVersion: nil, headerFields: nil)
         return nil
