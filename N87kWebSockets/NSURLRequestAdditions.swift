@@ -30,7 +30,7 @@ import Foundation
 extension NSMutableURLRequest {
 
     convenience init?(N87k_HTTPMessage HTTPMessage: CFHTTPMessage) {
-        if CFHTTPMessageCopyVersion(HTTPMessage)?.takeRetainedValue() as? String == kCFHTTPVersion1_1 {
+        if (CFHTTPMessageCopyVersion(HTTPMessage)?.takeRetainedValue() as? String)! == kCFHTTPVersion1_1 {
             if let URL: NSURL = CFHTTPMessageCopyRequestURL(HTTPMessage)?.takeRetainedValue() {
                 self.init(URL: URL)
                 HTTPMethod = CFHTTPMessageCopyRequestMethod(HTTPMessage)?.takeRetainedValue() ?? "GET"
@@ -51,7 +51,7 @@ extension NSURLRequest {
 
         let requestMessage = CFHTTPMessageCreateRequest(kCFAllocatorDefault, HTTPMethod!, URL, kCFHTTPVersion1_1).takeRetainedValue()
 
-        let host = URL.host! + (URL.port != nil ? ":\(URL.port!)" : "")
+        let host = URL!.host! + (URL!.port != nil ? ":\(URL!.port!)" : "")
         CFHTTPMessageSetHeaderFieldValue(requestMessage, "Host", host)
         if let requestHeaders = allHTTPHeaderFields as? [NSString: NSString] {
             for (k, v) in requestHeaders {

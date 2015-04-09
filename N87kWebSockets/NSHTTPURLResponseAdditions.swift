@@ -33,7 +33,7 @@ extension NSHTTPURLResponse {
         if let HTTPVersion: NSString = CFHTTPMessageCopyVersion(HTTPMessage)?.takeRetainedValue() {
             if let headerFields: NSDictionary = CFHTTPMessageCopyAllHeaderFields(HTTPMessage)?.takeRetainedValue() {
                 let statusCode = CFHTTPMessageGetResponseStatusCode(HTTPMessage)
-                self.init(URL: URL, statusCode: statusCode, HTTPVersion: HTTPVersion, headerFields: headerFields)
+                self.init(URL: URL, statusCode: statusCode, HTTPVersion: HTTPVersion as String, headerFields: headerFields as [NSObject : AnyObject])
                 return
             }
         }
@@ -45,7 +45,7 @@ extension NSHTTPURLResponse {
     var N87k_serializedData: NSData? {
         if let responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, nil, kCFHTTPVersion1_1)?.takeRetainedValue() {
             for (headerField, value) in allHeaderFields {
-                CFHTTPMessageSetHeaderFieldValue(responseMessage, headerField as NSString, value as NSString)
+                CFHTTPMessageSetHeaderFieldValue(responseMessage, headerField as! NSString, value as! NSString)
             }
             return CFHTTPMessageCopySerializedMessage(responseMessage)?.takeRetainedValue()
         }

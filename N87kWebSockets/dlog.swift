@@ -26,7 +26,7 @@
 
 import Foundation
 
-func dlog<T>(msg: @autoclosure () -> T) {
+func dlog<T>(@autoclosure msg: () -> T) {
     #if DEBUG
         NSLog("N87kWebSockets: %@", toString(msg()))
     #endif

@@ -40,7 +40,7 @@ class ClientHandshake: NSObject {
         case CarriageReturn1
         case NewLine2
         case CarriageReturn2
-        func stateWithByte(byte: Byte) -> WhitespaceState {
+        func stateWithByte(byte: UInt8) -> WhitespaceState {
             switch (self, byte) {
             case (.NewLine2, 0xa): return .CarriageReturn2
             case (.CarriageReturn1, 0xd): return .NewLine2
@@ -72,13 +72,13 @@ class ClientHandshake: NSObject {
     }
 
     init?(request: NSURLRequest) {
-        let tmpRequest = NSMutableURLRequest(URL: request.URL)
+        let tmpRequest = NSMutableURLRequest(URL: request.URL!)
         self.request = tmpRequest
         super.init()
-        if request.URL.host == nil || "GET" != request.HTTPMethod || scheme == nil || key == nil {
+        if request.URL!.host == nil || "GET" != request.HTTPMethod || scheme == nil || key == nil {
             return nil
         }
-        if let port = request.URL.port {
+        if let port = request.URL!.port {
             tmpRequest.setValue("\(request.URL.host!):\(port)", forHTTPHeaderField: HTTPHeaderFields.Host)
         } else {
             tmpRequest.setValue(request.URL.host, forHTTPHeaderField: HTTPHeaderFields.Host)
@@ -90,7 +90,7 @@ class ClientHandshake: NSObject {
     }
 
     private var scheme: Scheme? {
-        if let scheme = request.URL.scheme {
+        if let scheme = request.URL!.scheme {
             return Scheme(rawValue: scheme)
         }
         return nil
@@ -100,7 +100,7 @@ class ClientHandshake: NSObject {
         var responseData: NSData?
         let end = data.bytes + data.length
         for var byte = data.bytes; byte < end; byte++ {
-            whitespaceState = whitespaceState.stateWithByte(UnsafePointer<Byte>(byte).memory)
+            whitespaceState = whitespaceState.stateWithByte(UnsafePointer<UInt8>(byte).memory)
             if whitespaceState == .CarriageReturn2 {
                 responseData = NSData(bytes: byte + 1, length: end - byte - 1)
                 break
@@ -112,7 +112,7 @@ class ClientHandshake: NSObject {
             return .Incomplete
         }
 
-        if let response = NSHTTPURLResponse(N87k_URL: request.URL, HTTPMessage: responseMessage) {
+        if let response = NSHTTPURLResponse(N87k_URL: request.URL!, HTTPMessage: responseMessage) {
             if response.statusCode == HTTPStatusCodes.Upgrade {
                 let headerFields = response.allHeaderFields
                 if  headerFields[HTTPHeaderFields.Connection]?.lowercaseString != HTTPHeaderValues.Upgrade.lowercaseString ||

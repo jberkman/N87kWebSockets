@@ -85,7 +85,7 @@ public class WebSocket: NSObject {
 
     private var _currentRequest: NSURLRequest? {
         didSet {
-            if let requestScheme = _currentRequest?.URL.scheme {
+            if let requestScheme = _currentRequest?.URL?.scheme {
                 scheme = Scheme(rawValue: requestScheme)
             } else {
                 scheme = nil
@@ -118,7 +118,7 @@ public class WebSocket: NSObject {
     public init(request: NSURLRequest, subprotocols: [String] = []) {
         originalRequest = request
         _currentRequest = request
-        if let scheme = request.URL.scheme {
+        if let scheme = request.URL?.scheme {
             self.scheme = Scheme(rawValue: scheme)
         }
         self.subprotocols = subprotocols
@@ -145,12 +145,12 @@ public class WebSocket: NSObject {
     public func connect() {
         switch state {
         case .Closed where currentRequest != nil:
-            if currentRequest!.URL.host == nil || scheme == nil || currentRequest!.HTTPMethod != "GET" {
+            if currentRequest!.URL?.host == nil || scheme == nil || currentRequest!.HTTPMethod != "GET" {
                 delegate?.webSocket(self, didCloseWithError: NSError(domain: NSURLErrorDomain, code: NSURLErrorBadURL, userInfo: nil))
                 return
             }
             
-            let port = currentRequest!.URL.port?.integerValue ?? scheme!.defaultPort
+            let port = currentRequest!.URL?.port?.integerValue ?? scheme!.defaultPort
             var inputStream: NSInputStream?
             var outputStream: NSOutputStream?
             NSStream.getStreamsToHostWithName(currentRequest!.URL.host!, port: port, inputStream: &inputStream, outputStream: &outputStream)
@@ -213,7 +213,7 @@ public class WebSocket: NSObject {
                             delegate?.webSocket?(self, didReadHTTPData: data)
                         }
                     }
-                } else if let response = NSHTTPURLResponse(URL: request.URL, statusCode: HTTPStatusCodes.InternalServerError, HTTPVersion: kCFHTTPVersion1_1, headerFields: nil) {
+                } else if let response = NSHTTPURLResponse(URL: request.URL!, statusCode: HTTPStatusCodes.InternalServerError, HTTPVersion: kCFHTTPVersion1_1, headerFields: nil) {
                     if let data = response.N87k_serializedData {
                         outputStream.writeData(data)
                     }
